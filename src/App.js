@@ -1,24 +1,37 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './components/Auth/Login';
+import Register from './components/Auth/Register';
+import ForgotPassword from './components/Auth/ForgotPassword';
+import ChangePassword from './components/Auth/ChangePassword';
+import Dashboard from './components/Admin/Dashboard';
+// ... import các component khác
+import Home from './components/Customer/Home';
+import { isAuthenticated, isAdmin } from './services/auth';
+
+const ProtectedRoute = ({ children, adminOnly }) => {
+  if (!isAuthenticated()) return <Navigate to="/login" />;
+  if (adminOnly && !isAdmin()) return <Navigate to="/" />;
+  return children;
+};
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+        
+        {/* Phần Admin */}
+        <Route path="/admin/dashboard" element={<ProtectedRoute adminOnly><Dashboard /></ProtectedRoute>} />
+        {/* ... các routes khác */}
+        
+        {/* Phần Khách hàng */}
+        <Route path="/" element={<Home />} />
+      </Routes>
+    </Router>
   );
 }
 

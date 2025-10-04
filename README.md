@@ -68,3 +68,9 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+npm install @mui/material @emotion/react @emotion/styled @mui/icons-material
+npm install react-router-dom axios jwt-decode
+npm install react-chatbot-kit
+npm install formik yup 
+npm install react-slick slick-carousel
