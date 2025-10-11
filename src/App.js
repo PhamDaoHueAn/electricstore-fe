@@ -8,6 +8,9 @@ import Dashboard from './components/Admin/Dashboard';
 // ... import các component khác
 import Home from './components/Customer/Home';
 import { isAuthenticated, isAdmin } from './services/auth';
+import ProductDetail from './components/Customer/ProductDetail';
+import Layout from './components/Layout';
+
 
 const ProtectedRoute = ({ children, adminOnly }) => {
   if (!isAuthenticated()) return <Navigate to="/login" />;
@@ -18,12 +21,13 @@ const ProtectedRoute = ({ children, adminOnly }) => {
 function App() {
   return (
     <Router>
-      <Routes>
+      <Layout>
+        <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-        
+        <Route path="/product-detail/:productId" element={<ProductDetail />} />
         {/* Phần Admin */}
         <Route path="/admin/dashboard" element={<ProtectedRoute adminOnly><Dashboard /></ProtectedRoute>} />
         {/* ... các routes khác */}
@@ -31,6 +35,7 @@ function App() {
         {/* Phần Khách hàng */}
         <Route path="/" element={<Home />} />
       </Routes>
+      </Layout>
     </Router>
   );
 }
