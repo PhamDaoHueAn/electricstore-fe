@@ -1,0 +1,49 @@
+/* src/components/Customer/Checkout.module.css */
+.checkoutContainer {
+  padding: 20px;
+}
+
+.checkoutContainer .MuiTableCell-root {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.checkoutContainer .MuiTableRow-root:hover {
+  background-color: #f5f5f5;
+}
+
+.checkoutContainer .MuiTextField-root {
+  margin-bottom: 16px;
+}
+
+.checkoutContainer .MuiSelect-root {
+  margin-bottom: 16px;
+}
+
+.checkoutContainer .MuiButton-contained {
+  background-color: #0560e7;
+}
+
+.checkoutContainer .MuiButton-contained:hover {
+  background-color: #004ba0;
+}
+
+.checkoutContainer .MuiAlert-root {
+  margin-bottom: 16px;
+}
+
+.checkoutContainer .Mui-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emptyCart {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+@media (max-width: 600px) {
+  .checkoutContainer {
+    padding: 8px;
+  }
+}

@@ -1,54 +1,95 @@
-// src/components/Header.js
 import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Button, IconButton, Menu, MenuItem, TextField } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, IconButton, TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { isAuthenticated } from '../services/auth';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import API from '../services/api';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 import styles from './Header.module.css';
 
 const Header = () => {
   const navigate = useNavigate();
   const isLoggedIn = isAuthenticated();
-  const [anchorEl, setAnchorEl] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [cartCount, setCartCount] = useState(0);
+  const [username, setUsername] = useState('');
 
-  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
-  const handleLogoutClick = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    setCartCount(0);
-    navigate('/login');
+  // Lấy tên người dùng từ token
+  const getUsernameFromToken = () => {
+    const token = Cookies.get('authToken');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        return decoded.name || decoded.username || 'User';
+      } catch (error) {
+        console.error('Invalid token:', error);
+        return 'User';
+      }
+    }
+    return '';
   };
 
-  const handleSearch = (e) => {
-    if (e.key === 'Enter' || e.type === 'click') {
-      if (searchTerm.trim()) {
-        navigate(`/search?query=${encodeURIComponent(searchTerm.trim())}`);
-        setSearchTerm(''); // Xóa search term sau khi tìm
+  // Fetch số lượng sản phẩm trong giỏ hàng
+  const fetchCartCount = async () => {
+    if (!isLoggedIn) {
+      setCartCount(0);
+      return;
+    }
+
+    try {
+      const response = await API.get('/Cart', {
+        headers: { Authorization: `Bearer ${Cookies.get('authToken')}` },
+        timeout: 5000,
+      });
+      const totalQuantity = Array.isArray(response.data)
+        ? response.data.reduce((sum, item) => sum + (item.quantity || 0), 0)
+        : 0;
+      setCartCount(totalQuantity);
+    } catch (error) {
+      console.error('Error fetching cart count:', error);
+      if (error.response?.status === 401) {
+        Cookies.remove('authToken');
+        Cookies.remove('refreshToken');
+        setUsername('');
+        setCartCount(0);
+        navigate('/login');
+      } else {
+        setCartCount(0);
       }
     }
   };
 
+  // Xử lý đăng nhập và giỏ hàng
   useEffect(() => {
-    const fetchCartCount = async () => {
-      if (isLoggedIn) {
-        try {
-          const response = await API.get('/Cart');
-          const totalQuantity = response.data.reduce((sum, item) => sum + (item.quantity || 0), 0);
-          setCartCount(totalQuantity);
-        } catch (error) {
-          console.error('Error fetching cart count:', error);
-          setCartCount(0);
-        }
-      } else {
-        setCartCount(0);
-      }
-    };
-    fetchCartCount();
+    if (isLoggedIn) {
+      setUsername(getUsernameFromToken());
+      fetchCartCount();
+    } else {
+      setUsername('');
+      setCartCount(0);
+    }
   }, [isLoggedIn]);
+
+  // Xử lý tìm kiếm
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' || e.type === 'click') {
+      if (searchTerm.trim()) {
+        navigate(`/search?query=${encodeURIComponent(searchTerm.trim())}`);
+        setSearchTerm('');
+      }
+    }
+  };
+
+  // Xử lý đăng xuất
+  const handleLogoutClick = () => {
+    Cookies.remove('authToken');
+    Cookies.remove('refreshToken');
+    setCartCount(0);
+    setUsername('');
+    navigate('/login');
+  };
 
   return (
     <AppBar position="static" className={styles.header}>
@@ -57,7 +98,10 @@ const Header = () => {
           variant="h5"
           component="a"
           href="/"
-          onClick={(e) => { e.preventDefault(); navigate('/'); }}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate('/');
+          }}
           className={styles.logo}
         >
           Điện Máy Xanh
@@ -67,7 +111,7 @@ const Header = () => {
             variant="outlined"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm kiếm sản phẩm điện máy..."
+            placeholder="Tìm kiếm sản phẩm..."
             className={styles.searchInput}
             onKeyPress={handleSearch}
             size="small"
@@ -82,57 +126,51 @@ const Header = () => {
           </Button>
         </div>
         <div className={styles.userActions}>
-          {!isLoggedIn ? (
+          {isLoggedIn ? (
             <>
+              <IconButton
+                color="inherit"
+                onClick={() => navigate('/profile')}
+                className={styles.userIcon}
+              >
+                <AccountCircleIcon />
+              </IconButton>
+              <Typography
+                variant="body1"
+                className={styles.username}
+                onClick={() => navigate('/profile')}
+                style={{ cursor: 'pointer', marginRight: '16px' }}
+              >
+                {username}
+              </Typography>
               <Button
                 variant="contained"
                 color="primary"
-                href="/login"
-                className={styles.loginButton}
+                onClick={handleLogoutClick}
+                className={styles.logoutButton}
               >
-                Đăng nhập
-              </Button>
-              
-              <Button
-                variant="contained"
-                color="primary"
-                href="/cart"
-                className={styles.cartButton}
-                startIcon={<ShoppingCartIcon />}
-              >
-                Giỏ hàng{cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
+                Đăng Xuất
               </Button>
             </>
           ) : (
-            <>
-              <IconButton onClick={handleMenuOpen} color="inherit">
-                <img
-                  src="/images/anhdaidien.jpg"
-                  alt="User Avatar"
-                  className={styles.avatar}
-                />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                className={styles.dropdownMenu}
-              >
-                <MenuItem onClick={handleMenuClose} component={Button} href="/profile">
-                  Thông tin cá nhân
-                </MenuItem>
-                <MenuItem onClick={handleMenuClose} component={Button} href="/cart">
-                  Giỏ hàng{cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
-                </MenuItem>
-                <MenuItem onClick={handleMenuClose} component={Button} href="/products">
-                  Danh sách sản phẩm
-                </MenuItem>
-                <MenuItem onClick={handleLogoutClick} className={styles.logoutItem}>
-                  Đăng Xuất
-                </MenuItem>
-              </Menu>
-            </>
+            <Button
+              variant="contained"
+              color="primary"
+              href="/login"
+              className={styles.loginButton}
+            >
+              Đăng nhập
+            </Button>
           )}
+          <Button
+            variant="contained"
+            color="primary"
+            href="/cart"
+            className={styles.cartButton}
+            startIcon={<ShoppingCartIcon />}
+          >
+            Giỏ hàng{cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
+          </Button>
         </div>
       </Toolbar>
     </AppBar>

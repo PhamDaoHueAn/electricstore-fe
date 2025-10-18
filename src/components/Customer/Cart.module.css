@@ -1,0 +1,152 @@
+.container {
+  padding: 16px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+}
+
+.error {
+  background-color: #ffe6e6;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.emptyCart {
+  text-align: center;
+  color: #666;
+  font-size: 1.1rem;
+  margin: 32px 0;
+}
+
+.tableContainer {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHead {
+  background-color: #f5f5f5;
+}
+
+.tableCell {
+  padding: 12px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.tableCell img {
+  object-fit: cover;
+}
+
+.quantityControl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.quantityButton {
+  border-radius: 50%;
+  padding: 4px;
+  background-color: #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.quantityButton:hover {
+  background-color: #e0e0e0;
+}
+
+.quantityButton:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.quantityText {
+  min-width: 24px;
+  text-align: center;
+}
+
+.deleteButton {
+  color: #d32f2f;
+}
+
+.deleteButton:hover {
+  background-color: #ffe6e6;
+}
+
+.actionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.clearButton {
+  border-color: #d32f2f;
+  color: #d32f2f;
+}
+
+.clearButton:hover {
+  background-color: #ffe6e6;
+  border-color: #b71c1c;
+}
+
+.checkoutButton {
+  background-color: #0560e7;
+}
+
+.checkoutButton:hover {
+  background-color: #004ba0;
+}
+
+.totalText {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .tableCell {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  .tableCell img {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .quantityControl {
+    gap: 4px;
+  }
+
+  .actionRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .clearButton,
+  .checkoutButton {
+    width: 100%;
+  }
+}

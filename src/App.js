@@ -10,7 +10,9 @@ import Home from './components/Customer/Home';
 import { isAuthenticated, isAdmin } from './services/auth';
 import ProductDetail from './components/Customer/ProductDetail';
 import Layout from './components/Layout';
-
+import Cart from './components/Customer/Cart';
+import Checkout from './components/Customer/Checkout';
+import OrderSuccess from './components/Customer/OrderSuccess';
 
 const ProtectedRoute = ({ children, adminOnly }) => {
   if (!isAuthenticated()) return <Navigate to="/login" />;
@@ -22,12 +24,15 @@ function App() {
   return (
     <Router>
       <Layout>
-        <Routes>
+        <Routes>c 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
         <Route path="/product-detail/:productId" element={<ProductDetail />} />
+        <Route path="/cart" element={<ProtectedRoute><Cart/></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute><Checkout/></ProtectedRoute>} />
+        <Route path="/order-success" element={<ProtectedRoute><OrderSuccess/></ProtectedRoute>} />
         {/* Phần Admin */}
         <Route path="/admin/dashboard" element={<ProtectedRoute adminOnly><Dashboard /></ProtectedRoute>} />
         {/* ... các routes khác */}

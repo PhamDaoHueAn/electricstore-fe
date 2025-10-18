@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -11,15 +11,19 @@ import {
   CssBaseline,
   Modal,
   TextField,
+  Card,
+  CardMedia,
+  CardContent,
 } from '@mui/material';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import API from '../../services/api';
 import Cookies from 'js-cookie';
-import jwtDecode from 'jwt-decode'; // Cài đặt: npm install jwt-decode
+import { jwtDecode } from 'jwt-decode';
 import styles from './ProductDetail.module.css';
 
 const ProductDetail = () => {
@@ -27,19 +31,21 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [loadingReviews, setLoadingReviews] = useState(true);
+  const [loadingRelated, setLoadingRelated] = useState(true);
   const [errorProduct, setErrorProduct] = useState(null);
   const [errorReviews, setErrorReviews] = useState(null);
+  const [errorRelated, setErrorRelated] = useState(null);
+  const [reviewError, setReviewError] = useState(null);
   const sliderRef = useRef(null);
-  const thumbnailRef = useRef(null);
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  // State cho modal đánh giá
   const [openReviewModal, setOpenReviewModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewContent, setReviewContent] = useState('');
   const [editReviewId, setEditReviewId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Lấy thông tin từ token
   const getUserIdFromToken = () => {
@@ -47,7 +53,7 @@ const ProductDetail = () => {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        return decoded.AccountID || decoded.sub; // Tùy thuộc vào cấu trúc token
+        return decoded.AccountID || decoded.sub;
       } catch (error) {
         console.error('Invalid token:', error);
         return null;
@@ -57,12 +63,12 @@ const ProductDetail = () => {
   };
 
   // Làm mới token
-  const refreshToken = async () => {
+  const refreshToken = useCallback(async () => {
     const refreshToken = Cookies.get('refreshToken');
     if (!refreshToken) throw new Error('No refresh token available');
     try {
-      const response = await API.post('/api/Auth/refresh', { refreshToken });
-      Cookies.set('authToken', response.data.accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', expires: 7 });
+      const response = await API.post('/Auth/refresh-token', { refreshToken }, { timeout: 5000 });
+      Cookies.set('authToken', response.data.accessToken, { secure: process.env.NODE_ENV === 'production', expires: 7 });
       return response.data.accessToken;
     } catch (error) {
       console.error('Refresh token failed:', error);
@@ -71,69 +77,102 @@ const ProductDetail = () => {
       navigate('/login');
       return null;
     }
-  };
+  }, [navigate]);
 
   // Kiểm tra và làm mới token trước khi gửi yêu cầu
-  const withTokenRefresh = async (apiCall) => {
+  const withTokenRefresh = useCallback(async (apiCall) => {
     const token = Cookies.get('authToken');
     if (!token) {
       navigate('/login');
       return null;
     }
     try {
-      const response = await apiCall(token);
-      return response;
+      return await apiCall(token);
     } catch (error) {
-      if (error.response && error.response.status === 401) {
+      if (error.response?.status === 401) {
         const newToken = await refreshToken();
         if (newToken) {
-          const response = await apiCall(newToken);
-          return response;
+          return await apiCall(newToken);
         }
       }
       throw error;
     }
-  };
+  }, [navigate, refreshToken]);
+
+  // Fetch sản phẩm
+  const fetchProduct = useCallback(async () => {
+    setLoadingProduct(true);
+    try {
+      const response = await API.get(`/Products/${productId}`, { timeout: 5000 });
+      if (!response.data || Object.keys(response.data).length === 0) {
+        throw new Error('Sản phẩm không tồn tại');
+      }
+      setProduct(response.data);
+    } catch (err) {
+      setErrorProduct(err.response?.data?.message || 'Không thể tải sản phẩm. Vui lòng thử lại.');
+      console.error('Fetch product error:', err.response?.data || err.message);
+      setProduct(null);
+    } finally {
+      setLoadingProduct(false);
+    }
+  }, [productId]);
+
+  // Fetch đánh giá
+  const fetchReviews = useCallback(async () => {
+    setLoadingReviews(true);
+    try {
+      const response = await API.get(`/api/ProductReview/ByProduct/${productId}`, { timeout: 5000 });
+      const data = Array.isArray(response.data) ? response.data : [];
+      setReviews(data);
+      setErrorReviews(data.length === 0 ? 'Sản phẩm chưa có đánh giá.' : null);
+    } catch (err) {
+      setErrorReviews('Sản phẩm chưa có đánh giá.');
+      console.error('Fetch reviews error:', err.response?.data || err.message);
+      setReviews([]);
+    } finally {
+      setLoadingReviews(false);
+    }
+  }, [productId]);
+
+  // Fetch sản phẩm tương tự
+  const fetchRelatedProducts = useCallback(async () => {
+    if (!product) return;
+    setLoadingRelated(true);
+    try {
+      const response = await API.get('/Products/GetAll', { timeout: 5000 });
+      if (response.data && Array.isArray(response.data.data)) {
+        const filtered = response.data.data
+          .filter(
+            (p) =>
+              p.productId !== parseInt(productId) &&
+              p.categoryName === product.categoryName
+          )
+          .slice(0, 4);
+        setRelatedProducts(filtered);
+        setErrorRelated(filtered.length === 0 ? 'Không tìm thấy sản phẩm tương tự.' : null);
+      } else {
+        setRelatedProducts([]);
+        setErrorRelated('Không tìm thấy sản phẩm tương tự.');
+      }
+    } catch (error) {
+      setErrorRelated('Không thể tải sản phẩm tương tự.');
+      console.error('Error fetching related products:', error.response?.data || error.message);
+      setRelatedProducts([]);
+    } finally {
+      setLoadingRelated(false);
+    }
+  }, [productId, product]);
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      setLoadingProduct(true);
-      try {
-        const response = await withTokenRefresh((token) =>
-          API.get(`/Products/${productId}`, { headers: { Authorization: `Bearer ${token}` } })
-        );
-        if (!response.data || Object.keys(response.data).length === 0) {
-          throw new Error('Sản phẩm không tồn tại trong response');
-        }
-        setProduct(response.data);
-      } catch (err) {
-        setErrorProduct(err.response?.data?.message || 'Không thể tải sản phẩm. Vui lòng thử lại.');
-        console.error('Fetch product error:', err.response?.data || err.message);
-        setProduct(null);
-      } finally {
-        setLoadingProduct(false);
-      }
-    };
-
-    const fetchReviews = async () => {
-      setLoadingReviews(true);
-      try {
-        const response = await withTokenRefresh((token) =>
-          API.get(`/ProductReview/ByProduct/${productId}`, { headers: { Authorization: `Bearer ${token}` } })
-        );
-        setReviews(Array.isArray(response.data) ? response.data : []);
-      } catch (err) {
-        setErrorReviews('Không thể tải đánh giá. Hiển thị sản phẩm mà không có đánh giá.');
-        console.error('Fetch reviews error:', err.response?.data || err.message);
-        setReviews([]);
-      } finally {
-        setLoadingReviews(false);
-      }
-    };
-
     fetchProduct();
     fetchReviews();
-  }, [productId, navigate]);
+  }, [productId, fetchProduct, fetchReviews]);
+
+  useEffect(() => {
+    if (product) {
+      fetchRelatedProducts();
+    }
+  }, [product, fetchRelatedProducts]);
 
   const sliderSettings = {
     dots: false,
@@ -142,14 +181,55 @@ const ProductDetail = () => {
     slidesToShow: 1,
     slidesToScroll: 1,
     arrows: true,
-    prevArrow: <button type="button" className="slick-prev">&#10094;</button>,
-    nextArrow: <button type="button" className="slick-next">&#10095;</button>,
     beforeChange: (oldIndex, newIndex) => setCurrentSlide(newIndex),
   };
 
-  const handleAddToCart = () => {
-    console.log('Thêm vào giỏ hàng:', productId);
-    // TODO: Implement API call to add to cart with token
+  const handleAddToCart = async () => {
+    const userId = getUserIdFromToken();
+    if (!userId) {
+      alert('Vui lòng đăng nhập để thêm vào giỏ hàng!');
+      navigate('/login');
+      return;
+    }
+    try {
+      const response = await withTokenRefresh((token) =>
+        API.post(
+          '/Cart/add',
+          { productId: parseInt(productId), quantity: 1 },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      );
+      if (response.status === 200) {
+        alert('Đã thêm vào giỏ hàng!');
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Đã xảy ra lỗi khi thêm vào giỏ hàng!');
+    }
+  };
+
+  const handleBuyNow = async () => {
+    const userId = getUserIdFromToken();
+    if (!userId) {
+      alert('Vui lòng đăng nhập để mua ngay!');
+      navigate('/login');
+      return;
+    }
+    try {
+      const response = await withTokenRefresh((token) =>
+        API.post(
+          '/Cart/add',
+          { productId: parseInt(productId), quantity: 1 },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      );
+      if (response.status === 200) {
+        navigate('/checkout');
+      }
+    } catch (error) {
+      console.error('Error adding to cart for buy now:', error);
+      alert('Đã xảy ra lỗi khi xử lý mua ngay!');
+    }
   };
 
   const handleThumbnailClick = (index) => {
@@ -191,25 +271,42 @@ const ProductDetail = () => {
     setReviewRating(0);
     setReviewContent('');
     setEditReviewId(null);
+    setReviewError(null);
   };
 
   // Gửi đánh giá mới
   const handleSubmitReview = async () => {
-    if (!reviewRating || !reviewContent) {
-      alert('Vui lòng nhập đầy đủ thông tin đánh giá!');
+    if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
+      setReviewError('Vui lòng chọn đánh giá từ 1 đến 5');
+      return;
+    }
+    if (!reviewContent.trim()) {
+      setReviewError('Vui lòng nhập nội dung đánh giá');
       return;
     }
 
-    const reviewData = {
-      productId: parseInt(productId),
-      userId: userId,
-      rating: reviewRating,
-      content: reviewContent,
-    };
-
+    setIsSubmitting(true);
     try {
+      const formData = new FormData();
+      formData.append('ProductId', parseInt(productId));
+      formData.append('Rating', parseInt(reviewRating));
+      formData.append('Content', reviewContent.trim());
+      formData.append('ParentID', 0);
+
+      console.log('Sending review data:', {
+        ProductId: parseInt(productId),
+        Rating: parseInt(reviewRating),
+        Content: reviewContent.trim(),
+        ParentID: 0,
+      });
+
       const response = await withTokenRefresh((token) =>
-        API.post('/ProductReview/create', reviewData, { headers: { Authorization: `Bearer ${token}` } })
+        API.post('/api/ProductReview/create', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
+          },
+        })
       );
       if (response.status === 200) {
         alert('Đánh giá thành công!');
@@ -217,26 +314,44 @@ const ProductDetail = () => {
         handleCloseReviewModal();
       }
     } catch (error) {
-      console.error('Error creating review:', error);
-      alert('Đã xảy ra lỗi khi gửi đánh giá!');
+      console.error('Error creating review:', error.response?.data, error.message);
+      setReviewError(
+        error.response?.data?.message || 'Không thể gửi đánh giá. Vui lòng thử lại.'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Cập nhật đánh giá
   const handleUpdateReview = async () => {
-    if (!reviewRating || !reviewContent) {
-      alert('Vui lòng nhập đầy đủ thông tin đánh giá!');
+    if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
+      setReviewError('Vui lòng chọn đánh giá từ 1 đến 5');
+      return;
+    }
+    if (!reviewContent.trim()) {
+      setReviewError('Vui lòng nhập nội dung đánh giá');
       return;
     }
 
-    const reviewData = {
-      rating: reviewRating,
-      content: reviewContent,
-    };
-
+    setIsSubmitting(true);
     try {
+      const formData = new FormData();
+      formData.append('Rating', parseInt(reviewRating));
+      formData.append('Content', reviewContent.trim());
+
+      console.log('Updating review data:', {
+        Rating: parseInt(reviewRating),
+        Content: reviewContent.trim(),
+      });
+
       const response = await withTokenRefresh((token) =>
-        API.put(`/ProductReview/${editReviewId}`, reviewData, { headers: { Authorization: `Bearer ${token}` } })
+        API.put(`/api/ProductReview/${editReviewId}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
+          },
+        })
       );
       if (response.status === 200) {
         alert('Cập nhật đánh giá thành công!');
@@ -244,8 +359,12 @@ const ProductDetail = () => {
         handleCloseReviewModal();
       }
     } catch (error) {
-      console.error('Error updating review:', error);
-      alert('Đã xảy ra lỗi khi cập nhật đánh giá!');
+      console.error('Error updating review:', error.response?.data, error.message);
+      setReviewError(
+        error.response?.data?.message || 'Không thể cập nhật đánh giá. Vui lòng thử lại.'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -282,7 +401,7 @@ const ProductDetail = () => {
 
   const averageRating = reviews.length > 0 && reviews.some(r => r.isActive)
     ? reviews.reduce((sum, review) => sum + (review.isActive ? review.rating : 0), 0) / reviews.filter(r => r.isActive).length
-    : 4.9;
+    : 0;
 
   return (
     <Container maxWidth="lg" className={styles.container}>
@@ -299,41 +418,36 @@ const ProductDetail = () => {
           {/* Hình Ảnh */}
           <Grid item xs={12} md={6}>
             <Paper elevation={2} className={styles.imageContainer}>
-              <div className={styles.productPageImg}>
-                <Slider {...sliderSettings} ref={sliderRef}>
-                  {images.map((img, index) => (
-                    <div key={index} className={styles.mySlides} style={{ display: currentSlide === index ? 'block' : 'none' }}>
-                      <div className={styles.numbertext}>{index + 1} / {images.length}</div>
-                      <img
-                        src={img || '/placeholder-product.jpg'}
-                        alt={`${productName} ${index + 1}`}
-                        className={styles.mainImage}
-                        loading="lazy"
-                        onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
-                      />
-                    </div>
-                  ))}
-                </Slider>
-                <a href="#" className={styles.prev} onClick={() => sliderRef.current.slickPrev()}>&#10094;</a>
-                <a href="#" className={styles.next} onClick={() => sliderRef.current.slickNext()}>&#10095;</a>
-                <div className={styles.sliderImg} ref={thumbnailRef}>
-                  {images.map((img, index) => (
-                    <div
-                      key={index}
-                      className={`${styles.sliderBox} ${currentSlide === index ? styles.active : ''}`}
-                      onClick={() => handleThumbnailClick(index)}
-                    >
-                      <img
-                        src={img || '/placeholder-product.jpg'}
-                        alt={`${productName} thumbnail ${index + 1}`}
-                        className={styles.thumbnailImage}
-                        loading="lazy"
-                        onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <Slider {...sliderSettings} ref={sliderRef}>
+                {images.map((img, index) => (
+                  <div key={index}>
+                    <img
+                      src={img || '/placeholder-product.jpg'}
+                      alt={`${productName} ${index + 1}`}
+                      className={styles.mainImage}
+                      loading="lazy"
+                      onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                    />
+                  </div>
+                ))}
+              </Slider>
+              <Box className={styles.sliderImg}>
+                {images.map((img, index) => (
+                  <Box
+                    key={index}
+                    className={`${styles.sliderBox} ${currentSlide === index ? styles.active : ''}`}
+                    onClick={() => handleThumbnailClick(index)}
+                  >
+                    <img
+                      src={img || '/placeholder-product.jpg'}
+                      alt={`${productName} thumbnail ${index + 1}`}
+                      className={styles.thumbnailImage}
+                      loading="lazy"
+                      onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                    />
+                  </Box>
+                ))}
+              </Box>
             </Paper>
           </Grid>
 
@@ -365,19 +479,29 @@ const ProductDetail = () => {
             <Typography variant="body2" className={styles.gift}>
               Quà tặng: <strong>70.000₫</strong>
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddShoppingCartIcon />}
-              className={styles.addToCart}
-              onClick={handleAddToCart}
-              sx={{ mt: 2, py: 1.5, backgroundColor: '#0560e7', '&:hover': { backgroundColor: '#004ba0' } }}
-            >
-              Thêm vào giỏ hàng
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+              <Button
+                variant="contained"
+                startIcon={<AddShoppingCartIcon />}
+                className={styles.addToCart}
+                onClick={handleAddToCart}
+                sx={{ py: 1.5, backgroundColor: '#0560e7', '&:hover': { backgroundColor: '#004ba0' } }}
+              >
+                Thêm vào giỏ hàng
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<ShoppingCartCheckoutIcon />}
+                onClick={handleBuyNow}
+                sx={{ py: 1.5, backgroundColor: '#d32f2f', '&:hover': { backgroundColor: '#b71c1c' } }}
+              >
+                Mua ngay
+              </Button>
+            </Box>
             <Button
               variant="outlined"
               onClick={() => handleOpenReviewModal()}
-              sx={{ mt: 2, ml: 2, color: '#0560e7', borderColor: '#0560e7' }}
+              sx={{ mt: 2, color: '#0560e7', borderColor: '#0560e7' }}
             >
               Viết đánh giá
             </Button>
@@ -404,6 +528,51 @@ const ProductDetail = () => {
             </Paper>
           </Grid>
 
+          {/* Sản Phẩm Tương Tự */}
+          <Grid item xs={12}>
+            <Paper elevation={2} className={styles.details}>
+              <Typography variant="h6">Sản Phẩm Tương Tự</Typography>
+              {loadingRelated ? (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  Đang tải sản phẩm tương tự...
+                </Typography>
+              ) : errorRelated || relatedProducts.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  Không tìm thấy sản phẩm tương tự.
+                </Typography>
+              ) : (
+                <Grid container spacing={2} sx={{ mt: 2 }}>
+                  {relatedProducts.map((related) => (
+                    <Grid item xs={12} sm={6} md={3} key={related.productId}>
+                      <Card
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/product-detail/${related.productId}`)}
+                      >
+                        <CardMedia
+                          component="img"
+                          height="140"
+                          image={related.mainImage || '/placeholder-product.jpg'}
+                          alt={related.productName}
+                          loading="lazy"
+                          onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                        />
+                        <CardContent>
+                          <Typography variant="subtitle1" noWrap>
+                            {related.productName}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {related.sellPrice.toLocaleString('vi-VN')}₫
+                          </Typography>
+                          <Rating value={related.averageRating || 0} readOnly size="small" />
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Paper>
+          </Grid>
+
           {/* Đánh Giá Sản Phẩm */}
           <Grid item xs={12}>
             <Paper elevation={2} className={styles.details}>
@@ -412,9 +581,9 @@ const ProductDetail = () => {
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                   Đang tải đánh giá...
                 </Typography>
-              ) : errorReviews || reviews.length === 0 || reviews.every(r => !r.isActive) ? (
+              ) : errorReviews ? (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                  Chưa có đánh giá nào cho sản phẩm này.
+                  {errorReviews}
                 </Typography>
               ) : (
                 <Box className={styles.reviews}>
@@ -474,10 +643,15 @@ const ProductDetail = () => {
             <Typography id="review-modal-title" variant="h6" component="h2" sx={{ mb: 2 }}>
               {editReviewId ? 'Sửa đánh giá' : 'Viết đánh giá'}
             </Typography>
+            {reviewError && (
+              <Typography color="error" sx={{ mb: 2 }}>
+                {reviewError}
+              </Typography>
+            )}
             <Rating
               value={reviewRating}
               onChange={(e, newValue) => setReviewRating(newValue)}
-              precision={0.5}
+              precision={1}
               sx={{ mb: 2 }}
             />
             <TextField
@@ -490,13 +664,14 @@ const ProductDetail = () => {
               sx={{ mb: 2 }}
             />
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              <Button onClick={handleCloseReviewModal} variant="outlined">
+              <Button onClick={handleCloseReviewModal} variant="outlined" disabled={isSubmitting}>
                 Hủy
               </Button>
               <Button
                 onClick={editReviewId ? handleUpdateReview : handleSubmitReview}
                 variant="contained"
                 color="primary"
+                disabled={isSubmitting}
               >
                 {editReviewId ? 'Cập nhật' : 'Gửi'}
               </Button>

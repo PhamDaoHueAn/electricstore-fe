@@ -12,7 +12,6 @@ import {
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import MenuIcon from '@mui/icons-material/Menu';
 import API from '../../services/api';
 import styles from './Home.module.css';
 
@@ -46,85 +45,117 @@ const Home = () => {
     };
 
     fetchAllData();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, selectedCategory]);
 
   const fetchProducts = async () => {
     try {
-      const response = await API.get('/Products/GetAll');
-      console.log('Products response:', response.data); // Debug
+      // Gọi API với categoryId nếu có
+      const firstResponse = await API.get('/Products/GetAll', {
+        params: {
+          pageNumber: 1,
+          pageSize: 12,
+          sortBy: 'CreatedAt',
+          sortOrder: 'desc',
+          categoryId: selectedCategory || undefined,
+          brandId: undefined, // Có thể thêm lọc thương hiệu sau
+        },
+        timeout: 5000,
+      });
+      console.log('First products response:', firstResponse.data);
 
-      // Lấy array từ response.data.data (pagination)
-      const productArray = response.data?.data || [];
-      setProducts(Array.isArray(productArray) ? productArray : []);
+      const { totalPages, data: firstPageData } = firstResponse.data;
+      let allProducts = firstPageData || [];
+
+      // Lấy các trang còn lại nếu totalPages > 1
+      if (totalPages > 1) {
+        const pageRequests = [];
+        for (let page = 2; page <= totalPages; page++) {
+          pageRequests.push(
+            API.get('/Products/GetAll', {
+              params: {
+                pageNumber: page,
+                pageSize: 12,
+                sortBy: 'CreatedAt',
+                sortOrder: 'desc',
+                categoryId: selectedCategory || undefined,
+                brandId: undefined,
+              },
+              timeout: 5000,
+            })
+          );
+        }
+        const responses = await Promise.all(pageRequests);
+        responses.forEach(response => {
+          allProducts = allProducts.concat(response.data.data || []);
+        });
+      }
+
+      // Tính averageRating từ productReview
+      allProducts = allProducts.map(product => {
+        const reviews = Array.isArray(product.productReview) ? product.productReview : [];
+        const averageRating = reviews.length > 0
+          ? reviews.reduce((sum, review) => sum + (review.isActive ? review.rating : 0), 0) / reviews.filter(r => r.isActive).length
+          : 0;
+        return { ...product, averageRating };
+      });
+
+      setProducts(allProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
-      setProducts([]); // Fallback
+      setProducts([]);
       throw error;
     }
   };
 
   const fetchBanners = async () => {
     try {
-      const response = await API.get('/Banner');
-      console.log('Banners response:', response.data); // Debug
-
-      // Giả định banners là array trực tiếp hoặc wrap
+      const response = await API.get('/Banner', { timeout: 5000 });
+      console.log('Banners response:', response.data);
       let bannerArray = response.data;
       if (response.data?.data) {
-        bannerArray = response.data.data;  // Nếu wrap pagination
+        bannerArray = response.data.data;
       }
       setBanners(Array.isArray(bannerArray) ? bannerArray : []);
     } catch (error) {
       console.error('Error fetching banners:', error);
-      setBanners([]); // Fallback
+      setBanners([]);
       throw error;
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const response = await API.get('/Categories');
-      console.log('Categories response:', response.data); // Debug
-
-      // Giả định categories là array trực tiếp hoặc wrap
+      const response = await API.get('/Categories', { timeout: 5000 });
+      console.log('Categories response:', response.data);
       let categoryArray = response.data;
       if (response.data?.data) {
-        categoryArray = response.data.data;  // Nếu wrap pagination
+        categoryArray = response.data.data;
       }
       setCategories(Array.isArray(categoryArray) ? categoryArray : []);
     } catch (error) {
       console.error('Error fetching categories:', error);
-      setCategories([]); // Fallback
+      setCategories([]);
       throw error;
     }
   };
 
-
-
-  // FilteredProducts: Kết hợp search và category, match ID linh hoạt
   const filteredProducts = Array.isArray(products)
     ? products.filter(product => {
-      const matchesSearch = product.productName?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = !selectedCategory || (product.categoryId == selectedCategory); // Loose equality cho number/string
-      console.log('Filtering product:', product.productId, 'categoryId:', product.categoryId, 'selected:', selectedCategory, 'matches:', matchesCategory); // Debug
-      return matchesSearch && matchesCategory;
-    })
+        const matchesSearch = product.productName?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = !selectedCategory || (product.categoryId == selectedCategory);
+        console.log('Filtering product:', product.productId, 'categoryId:', product.categoryId, 'selected:', selectedCategory, 'matches:', matchesCategory);
+        return matchesSearch && matchesCategory;
+      })
     : [];
 
-
-
-
-
-  // Handler cho category image click
   const handleCategoryImageClick = (categoryId) => {
-    console.log('handleCategoryImageClick called with ID:', categoryId, 'Current products:', products.length); // Debug
+    console.log('handleCategoryImageClick called with ID:', categoryId, 'Current products:', products.length);
     if (selectedCategory == categoryId) {
-      setSelectedCategory(null); // Toggle off
+      setSelectedCategory(null);
     } else {
       setSelectedCategory(categoryId);
     }
-    setSearchTerm(''); // Xóa search
-    // Log filtered sau update (sẽ re-render)
+    setSearchTerm('');
   };
 
   const sliderSettings = {
@@ -137,12 +168,11 @@ const Home = () => {
     autoplaySpeed: 3000,
   };
 
-  // Category Carousel Settings
   const categorySliderSettings = {
     dots: true,
     infinite: true,
     speed: 500,
-    slidesToShow: 6, // 6 item (3 li x 2)
+    slidesToShow: 6,
     slidesToScroll: 6,
     responsive: [
       { breakpoint: 1024, settings: { slidesToShow: 4, slidesToScroll: 4 } },
@@ -161,7 +191,6 @@ const Home = () => {
     );
   }
 
-
   return (
     <div className={styles.container}>
       {error && (
@@ -173,8 +202,7 @@ const Home = () => {
         </Box>
       )}
 
-    
-      {/* Banner - Centered */}
+      {/* Banner */}
       <Container maxWidth="lg">
         <Box className={styles.banner}>
           {banners.length > 0 ? (
@@ -198,24 +226,24 @@ const Home = () => {
         </Box>
       </Container>
 
-      {/* Category Carousel - Centered, Giống DMX */}
+      {/* Category Carousel */}
       <Container maxWidth="lg">
         <section className={styles.mainMenuCategories}>
           <div className={styles.listCates}>
             <Slider {...categorySliderSettings}>
               {categories.map((category, index) => {
-                const categoryId = category.id || category.categoryId; // Linh hoạt ID
+                const categoryId = category.id || category.categoryId;
                 return (
                   <div key={categoryId || index} className={`${styles.cateItem} ${selectedCategory === categoryId ? styles.selected : ''}`}>
                     <a
                       href="#"
                       onClick={(e) => {
-                        e.preventDefault(); // Ngăn href mặc định
-                        console.log('Category clicked:', categoryId, 'Current selected:', selectedCategory); // Debug
+                        e.preventDefault();
+                        console.log('Category clicked:', categoryId, 'Current selected:', selectedCategory);
                         handleCategoryImageClick(categoryId);
                       }}
                     >
-                      <span>{category.discount || 'HOT'}</span> {/* Từ API hoặc hardcode */}
+                      <span>{category.discount || 'HOT'}</span>
                       <img
                         src={category.imageUrl || '/images/category-placeholder.jpg'}
                         alt={category.categoryName}
@@ -230,9 +258,7 @@ const Home = () => {
               })}
             </Slider>
           </div>
-          <div className={styles.pagesScroll}>
-            {/* Dots tự động từ Slick */}
-          </div>
+          <div className={styles.pagesScroll}></div>
         </section>
         {categories.length === 0 && !loading && (
           <Box textAlign="center" p={4}>
@@ -241,7 +267,7 @@ const Home = () => {
         )}
       </Container>
 
-      {/* Product Grid - Centered, CSS Grid Giống DMX */}
+      {/* Product Grid */}
       <Container maxWidth="lg">
         <Box className={styles.productGrid}>
           {filteredProducts.length === 0 ? (
@@ -259,13 +285,10 @@ const Home = () => {
                     onClick={() => navigate(`/product-detail/${product.productId}`)}
                     className={styles.mainContain}
                   >
-                    {/* Item Label */}
                     <div className={styles.itemLabel}>
                       {product.manufactureYear >= 2025 && <span className={styles.lnNew}>Mẫu mới</span>}
                       <span className={styles.lbTragop}>Trả chậm 0% trả trước 0đ</span>
                     </div>
-
-                    {/* Item Img */}
                     <div className={styles.itemImg}>
                       <img
                         className={styles.thumb}
@@ -275,37 +298,25 @@ const Home = () => {
                         onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
                       />
                     </div>
-
-                    {/* Result Label */}
                     <p className={styles.resultLabel}>
-                      <img src="/images/promotion-icon.png" alt="Promotion" width="20" height="20" /> {/* Hardcode icon */}
-                      <span>TRUNG THU GIẢM LỚN</span> {/* Hardcode hoặc từ API */}
+                      <img src="/images/promotion-icon.png" alt="Promotion" width="20" height="20" />
+                      <span>TRUNG THU GIẢM LỚN</span>
                     </p>
-
-                    {/* h3 */}
                     <h3>
                       {product.productName}
                       {product.manufactureYear >= 2025 && <span className={styles.newModel}>Mẫu mới</span>}
                     </h3>
-
-                    {/* Item Compare */}
                     <div className={styles.itemCompare}>
                       {product.manufactureYear && <span>{product.manufactureYear}W</span>}
-                      <span>Có bơm trợ lực</span> {/* Split từ description nếu cần */}
+                      <span>Có bơm trợ lực</span>
                     </div>
-
-                    {/* Item Txt Online */}
                     <p className={styles.itemTxtOnline}>
                       <i></i>
                       <span>Online giá rẻ quá</span>
                     </p>
-
-                    {/* Price */}
                     <strong className={styles.price}>
                       {product.sellPrice.toLocaleString('vi-VN')}₫
                     </strong>
-
-                    {/* Box P */}
                     {product.originalPrice > 0 && (
                       <div className={styles.boxP}>
                         <p className={styles.priceOld}>
@@ -316,27 +327,21 @@ const Home = () => {
                         </span>
                       </div>
                     )}
-
-                    {/* Item Gift */}
                     <p className={styles.itemGift}>
-                      Quà <b>70.000₫</b> {/* Hardcode hoặc từ API */}
+                      Quà <b>70.000₫</b>
                     </p>
                   </a>
-
-                  {/* Item Bottom */}
                   <div className={styles.itemBottom}>
                     <a href="javascript:;" className={styles.shiping} aria-label="shiping">
-                      <i className="bi bi-truck"></i> {/* Icon shipping */}
+                      <i className="bi bi-truck"></i>
                     </a>
                   </div>
-
-                  {/* Rating Compare */}
                   <div className={styles.ratingCompare}>
                     <div className={styles.voteTxt}>
                       <i></i>
-                      <b>4.9</b>
+                      <b>{(product.averageRating || 0).toFixed(1)}</b>
                     </div>
-                    <span className={styles.soldCount}>• Đã bán 11,9k</span> {/* Hardcode hoặc từ API */}
+                    <span className={styles.stockCount}>• Tồn kho {product.stockQuantity.toLocaleString('vi-VN')}</span>
                     <a href="javascript:;" className={styles.itemSs} onClick={(e) => e.stopPropagation()}>
                       <i className="bi bi-arrow-left-right"></i>
                       So sánh
@@ -348,8 +353,6 @@ const Home = () => {
           )}
         </Box>
       </Container>
-
-      
 
       {isLoggedIn && <MyChatbot />}
     </div>
