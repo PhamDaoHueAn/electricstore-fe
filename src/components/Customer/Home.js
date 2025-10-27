@@ -141,21 +141,17 @@ const Home = () => {
 
   const filteredProducts = Array.isArray(products)
     ? products.filter(product => {
-        const matchesSearch = product.productName?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = !selectedCategory || (product.categoryId == selectedCategory);
-        console.log('Filtering product:', product.productId, 'categoryId:', product.categoryId, 'selected:', selectedCategory, 'matches:', matchesCategory);
-        return matchesSearch && matchesCategory;
-      })
+      const matchesSearch = product.productName?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !selectedCategory || (product.categoryId == selectedCategory);
+      console.log('Filtering product:', product.productId, 'categoryId:', product.categoryId, 'selected:', selectedCategory, 'matches:', matchesCategory);
+      return matchesSearch && matchesCategory;
+    })
     : [];
 
   const handleCategoryImageClick = (categoryId) => {
-    console.log('handleCategoryImageClick called with ID:', categoryId, 'Current products:', products.length);
-    if (selectedCategory == categoryId) {
-      setSelectedCategory(null);
-    } else {
-      setSelectedCategory(categoryId);
-    }
-    setSearchTerm('');
+    console.log('Navigating to category:', categoryId);
+    setSelectedCategory(categoryId);
+    navigate(`/category/${categoryId}`);
   };
 
   const sliderSettings = {
@@ -236,10 +232,9 @@ const Home = () => {
                 return (
                   <div key={categoryId || index} className={`${styles.cateItem} ${selectedCategory === categoryId ? styles.selected : ''}`}>
                     <a
-                      href="#"
+                      href={`/category/${categoryId}`}
                       onClick={(e) => {
                         e.preventDefault();
-                        console.log('Category clicked:', categoryId, 'Current selected:', selectedCategory);
                         handleCategoryImageClick(categoryId);
                       }}
                     >

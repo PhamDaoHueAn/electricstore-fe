@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   TextField, 
   Button, 
@@ -14,7 +14,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
-import { login, isAdmin } from '../../services/auth';
+import { login, isAdmin, isAuthenticated } from '../../services/auth';
 
 const validationSchema = Yup.object({
   username: Yup.string().required('Tên đăng nhập là bắt buộc'),
@@ -23,6 +23,15 @@ const validationSchema = Yup.object({
 
 const Login = () => {
   const navigate = useNavigate();
+
+  // Xóa token nếu chưa đăng nhập khi vào trang login
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.dispatchEvent(new Event('authChange'));
+    }
+  }, []);
 
   return (
     <Container component="main" maxWidth="xs">
@@ -64,7 +73,7 @@ const Login = () => {
                   navigate('/');
                 }
               } catch (err) {
-                setErrors({ submit: err.response?.data || 'Đăng nhập thất bại' });
+                setErrors({ submit: err.response?.data?.message || 'Đăng nhập thất bại' });
               }
               setSubmitting(false);
             }}

@@ -1,0 +1,300 @@
+.container {
+  padding: 24px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.title {
+  color: #0560e7;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.brandMenu {
+  margin-bottom: 24px;
+}
+
+.listBrands {
+  padding: 8px 0;
+}
+
+.brandItem {
+  padding: 8px;
+  text-align: center;
+}
+
+.brandItem a {
+  display: inline-block;
+  text-decoration: none;
+  color: #333;
+  border: #666;
+}
+
+.brandItem img {
+  width: 47px;
+  height: 47px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.brandItem p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.brandItem.selected {
+  background-color: #e3f2fd;
+  border-radius: 8px;
+}
+
+.sortContainer {
+  margin-bottom: 24px;
+}
+
+.sortSelect {
+  min-width: 200px;
+  background-color: white;
+  border-radius: 4px;
+}
+
+.noResults {
+  text-align: center;
+  padding: 50px;
+  color: #d32f2f;
+}
+
+.productGrid {
+  margin-top: 16px;
+}
+
+.listproduct {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+}
+
+.item {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.item:hover {
+  transform: translateY(-4px);
+}
+
+.mainContain {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: 16px;
+}
+
+.itemLabel {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.lnNew, .lbTragop {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.lnNew {
+  background-color: #0560e7;
+  color: white;
+}
+
+.lbTragop {
+  background-color: #ffeb3b;
+  color: black;
+}
+
+.itemImg {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.resultLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #d32f2f;
+  margin: 8px 0;
+}
+
+.resultLabel img {
+  vertical-align: middle;
+}
+
+.mainContain h3 {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.newModel {
+  font-size: 12px;
+  color: #0560e7;
+  margin-left: 8px;
+}
+
+.itemCompare {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.itemTxtOnline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #0288d1;
+  margin-bottom: 8px;
+}
+
+.itemTxtOnline i {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: url('../../images/online-icon.png') no-repeat center;
+  background-size: contain;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: bold;
+  color: #d32f2f;
+  margin-bottom: 8px;
+}
+
+.boxP {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.priceOld {
+  font-size: 14px;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.percent {
+  font-size: 12px;
+  color: #d32f2f;
+}
+
+.itemGift {
+  font-size: 12px;
+  color: #333;
+}
+
+.itemGift b {
+  color: #d32f2f;
+}
+
+.itemBottom {
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+}
+
+.shiping {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #e3f2fd;
+  border-radius: 50%;
+  text-decoration: none;
+}
+
+.shiping i {
+  font-size: 18px;
+  color: #0560e7;
+}
+
+.ratingCompare {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  border-top: 1px solid #eee;
+}
+
+.voteTxt {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.voteTxt i {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: url('../../images/star-icon.png') no-repeat center;
+  background-size: contain;
+}
+
+.voteTxt b {
+  color: #d32f2f;
+}
+
+.stockCount {
+  font-size: 12px;
+  color: #666;
+}
+
+.itemSs {
+  font-size: 12px;
+  color: #0288d1;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.itemSs:hover {
+  color: #0560e7;
+}
+
+.pagination {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.pagination .MuiPaginationItem-root {
+  color: #0560e7;
+}
+
+.pagination .Mui-selected {
+  background-color: #0560e7;
+  color: white;
+}
+
+.pagination .MuiPaginationItem-root:hover {
+  background-color: #e3f2fd;
+}

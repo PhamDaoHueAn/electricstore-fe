@@ -159,7 +159,7 @@ const Checkout = () => {
 
       let response;
       if (paymentMethod === 'cod') {
-        response = await API.post('/Checkout/checkout/cod', checkoutData, {
+        response = await API.post('/Checkout/cod', checkoutData, {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
           timeout: 10000,
         });

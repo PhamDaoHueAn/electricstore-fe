@@ -22,7 +22,7 @@ import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import API from '../../services/api';
-import Cookies from 'js-cookie';
+import { isAuthenticated } from '../../services/auth';
 import { jwtDecode } from 'jwt-decode';
 import styles from './ProductDetail.module.css';
 
@@ -47,13 +47,14 @@ const ProductDetail = () => {
   const [editReviewId, setEditReviewId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Lấy thông tin từ token
+  // Lấy userId từ token
   const getUserIdFromToken = () => {
-    const token = Cookies.get('authToken');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        return decoded.AccountID || decoded.sub;
+        console.log('Decoded token:', decoded);
+        return decoded.AccountID || decoded.sub || null;
       } catch (error) {
         console.error('Invalid token:', error);
         return null;
@@ -64,28 +65,34 @@ const ProductDetail = () => {
 
   // Làm mới token
   const refreshToken = useCallback(async () => {
-    const refreshToken = Cookies.get('refreshToken');
-    if (!refreshToken) throw new Error('No refresh token available');
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      console.error('No refresh token available');
+      throw new Error('No refresh token available');
+    }
     try {
       const response = await API.post('/Auth/refresh-token', { refreshToken }, { timeout: 5000 });
-      Cookies.set('authToken', response.data.accessToken, { secure: process.env.NODE_ENV === 'production', expires: 7 });
+      console.log('Refresh token response:', response.data);
+      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
       return response.data.accessToken;
     } catch (error) {
-      console.error('Refresh token failed:', error);
-      Cookies.remove('authToken');
-      Cookies.remove('refreshToken');
+      console.error('Refresh token failed:', error.response?.data || error.message);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.dispatchEvent(new Event('authChange'));
       navigate('/login');
-      return null;
+      throw error;
     }
   }, [navigate]);
 
   // Kiểm tra và làm mới token trước khi gửi yêu cầu
   const withTokenRefresh = useCallback(async (apiCall) => {
-    const token = Cookies.get('authToken');
-    if (!token) {
+    if (!isAuthenticated()) {
       navigate('/login');
       return null;
     }
+    const token = localStorage.getItem('accessToken');
     try {
       return await apiCall(token);
     } catch (error) {
@@ -121,7 +128,7 @@ const ProductDetail = () => {
   const fetchReviews = useCallback(async () => {
     setLoadingReviews(true);
     try {
-      const response = await API.get(`/api/ProductReview/ByProduct/${productId}`, { timeout: 5000 });
+      const response = await API.get(`/ProductReview/ByProduct/${productId}`, { timeout: 5000 });
       const data = Array.isArray(response.data) ? response.data : [];
       setReviews(data);
       setErrorReviews(data.length === 0 ? 'Sản phẩm chưa có đánh giá.' : null);
@@ -185,8 +192,7 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = async () => {
-    const userId = getUserIdFromToken();
-    if (!userId) {
+    if (!isAuthenticated()) {
       alert('Vui lòng đăng nhập để thêm vào giỏ hàng!');
       navigate('/login');
       return;
@@ -199,18 +205,17 @@ const ProductDetail = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         )
       );
-      if (response.status === 200) {
-        alert('Đã thêm vào giỏ hàng!');
-      }
+      console.log('Add to cart response:', response.data);
+      alert('Đã thêm vào giỏ hàng!');
+      window.dispatchEvent(new Event('authChange')); // Cập nhật giỏ hàng trong Header
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      console.error('Error adding to cart:', error.response?.data || error.message);
       alert('Đã xảy ra lỗi khi thêm vào giỏ hàng!');
     }
   };
 
   const handleBuyNow = async () => {
-    const userId = getUserIdFromToken();
-    if (!userId) {
+    if (!isAuthenticated()) {
       alert('Vui lòng đăng nhập để mua ngay!');
       navigate('/login');
       return;
@@ -223,11 +228,10 @@ const ProductDetail = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         )
       );
-      if (response.status === 200) {
-        navigate('/checkout');
-      }
+      console.log('Buy now response:', response.data);
+      navigate('/checkout');
     } catch (error) {
-      console.error('Error adding to cart for buy now:', error);
+      console.error('Error adding to cart for buy now:', error.response?.data || error.message);
       alert('Đã xảy ra lỗi khi xử lý mua ngay!');
     }
   };
@@ -243,7 +247,7 @@ const ProductDetail = () => {
 
   // Mở modal để viết hoặc sửa đánh giá
   const handleOpenReviewModal = (review = null) => {
-    if (!userId) {
+    if (!isAuthenticated()) {
       alert('Vui lòng đăng nhập để viết đánh giá!');
       navigate('/login');
       return;
@@ -304,17 +308,16 @@ const ProductDetail = () => {
         API.post('/api/ProductReview/create', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         })
       );
-      if (response.status === 200) {
-        alert('Đánh giá thành công!');
-        setReviews([...reviews, response.data]);
-        handleCloseReviewModal();
-      }
+      console.log('Create review response:', response.data);
+      alert('Đánh giá thành công!');
+      setReviews([...reviews, response.data]);
+      handleCloseReviewModal();
     } catch (error) {
-      console.error('Error creating review:', error.response?.data, error.message);
+      console.error('Error creating review:', error.response?.data || error.message);
       setReviewError(
         error.response?.data?.message || 'Không thể gửi đánh giá. Vui lòng thử lại.'
       );
@@ -349,17 +352,16 @@ const ProductDetail = () => {
         API.put(`/api/ProductReview/${editReviewId}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         })
       );
-      if (response.status === 200) {
-        alert('Cập nhật đánh giá thành công!');
-        setReviews(reviews.map((r) => (r.reviewId === editReviewId ? response.data : r)));
-        handleCloseReviewModal();
-      }
+      console.log('Update review response:', response.data);
+      alert('Cập nhật đánh giá thành công!');
+      setReviews(reviews.map((r) => (r.reviewId === editReviewId ? response.data : r)));
+      handleCloseReviewModal();
     } catch (error) {
-      console.error('Error updating review:', error.response?.data, error.message);
+      console.error('Error updating review:', error.response?.data || error.message);
       setReviewError(
         error.response?.data?.message || 'Không thể cập nhật đánh giá. Vui lòng thử lại.'
       );
