@@ -14,6 +14,7 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import API from '../../services/api';
 import styles from './Home.module.css';
+import FlashSale from './FlashSale';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -221,6 +222,9 @@ const Home = () => {
           )}
         </Box>
       </Container>
+
+
+      <FlashSale />
 
       {/* Category Carousel */}
       <Container maxWidth="lg">
