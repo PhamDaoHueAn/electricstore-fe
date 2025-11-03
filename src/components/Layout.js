@@ -9,7 +9,7 @@ const Layout = ({ children }) => {
   return (
     <div className={styles.layout}>
       <Header />
-      <Container maxWidth="lg" className={styles.content}>
+      <Container maxWidth="100vh" className={styles.content}>
         {children}
       </Container>
       <Footer />

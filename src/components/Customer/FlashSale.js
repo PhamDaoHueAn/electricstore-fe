@@ -163,7 +163,7 @@ const FlashSale = () => {
             <Container maxWidth="lg">
                 <Box className={styles.flashSaleContainer}>
                     <Box className={styles.flashSaleHeader}>
-                        <Typography variant="h5" className={styles.title}>
+                        <Typography variant="h4" className={styles.title}>
                             {selectedTimeSlot?.flashSaleName || 'FLASH SALE'}
                         </Typography>
                     </Box>

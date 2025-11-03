@@ -5,6 +5,7 @@
   background-color: #f5f5f5;
   min-height: 100vh;
   position: relative;
+  background-image: url('../../images/sale.jpg');
 }
 
 
@@ -134,6 +135,7 @@
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transition: box-shadow 0.3s;
+  margin-bottom: 10px;
 }
 
 .item:hover {

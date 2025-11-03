@@ -163,6 +163,7 @@ const Home = () => {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 3000,
+    arrows: false
   };
 
   const categorySliderSettings = {
@@ -189,7 +190,7 @@ const Home = () => {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} >
       {error && (
         <Box sx={{ bgcolor: 'error.main', color: 'white', p: 2, textAlign: 'center' }}>
           <Typography>{error}</Typography>

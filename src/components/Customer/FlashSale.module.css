@@ -9,10 +9,13 @@
   padding: 6px 8px 12px;
   display: flex;
   align-items: center;
+  background-color: red;
+  width: fit-content;
+  border-radius: 20px;
 }
 
 .title {
-  color: #d0021b;
+  color: white;
   font-weight: 700;
 }
 
