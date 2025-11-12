@@ -5,7 +5,6 @@ import Register from './components/Auth/Register';
 import ForgotPassword from './components/Auth/ForgotPassword';
 import ChangePassword from './components/Auth/ChangePassword';
 import Dashboard from './components/Admin/Dashboard';
-// ... import các component khác
 import Home from './components/Customer/Home';
 import { isAuthenticated, isAdmin } from './services/auth';
 import ProductDetail from './components/Customer/ProductDetail';
@@ -18,8 +17,8 @@ import CategoryProducts from './components/Customer/CategoryProducts';
 import Profile from './components/Customer/Profile';
 
 const ProtectedRoute = ({ children, adminOnly }) => {
-  if (!isAuthenticated()) return <Navigate to="/login" />;
-  if (adminOnly && !isAdmin()) return <Navigate to="/" />;
+  if (!isAuthenticated()) return <Navigate to="/login" replace />;
+  if (adminOnly && !isAdmin()) return <Navigate to="/" replace />;
   return children;
 };
 
@@ -27,25 +26,50 @@ function App() {
   return (
     <Router>
       <Layout>
-        <Routes>c 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-        <Route path="/product-detail/:productId" element={<ProductDetail />} />
-        <Route path="/cart" element={<ProtectedRoute><Cart/></ProtectedRoute>} />
-        <Route path="/checkout" element={<ProtectedRoute><Checkout/></ProtectedRoute>} />
-        <Route path="/order-success" element={<ProtectedRoute><OrderSuccess/></ProtectedRoute>} />
-        <Route path="/search" element={<SearchResults />} />
-        <Route path="/category/:categoryId" element={<CategoryProducts />} />
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        {/* Phần Admin */}
-        <Route path="/admin/dashboard" element={<ProtectedRoute adminOnly><Dashboard /></ProtectedRoute>} />
-        {/* ... các routes khác */}
-        
-        {/* Phần Khách hàng */}
-        <Route path="/" element={<Home />} />
-      </Routes>
+        <Routes>
+          {/* PUBLIC ROUTES */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/product-detail/:productId" element={<ProductDetail />} />
+          <Route path="/search" element={<SearchResults />} />
+          <Route path="/category/:categoryId" element={<CategoryProducts />} />
+
+          {/* GUEST-ALLOWED ROUTES (KHÁCH VÃNG LAI ĐƯỢC DÙNG) */}
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
+
+          {/* PROTECTED ROUTES (BẮT BUỘC ĐĂNG NHẬP) */}
+          <Route 
+            path="/change-password" 
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* ADMIN ROUTES */}
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <ProtectedRoute adminOnly>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          {/* ... các route admin khác */}
+        </Routes>
       </Layout>
     </Router>
   );

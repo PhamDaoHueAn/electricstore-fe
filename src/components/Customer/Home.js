@@ -7,8 +7,13 @@ import {
   Typography,
   Button,
   Box,
-  CircularProgress
+  CircularProgress,
+  Pagination,
+  PaginationItem,
+  IconButton
 } from '@mui/material';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -19,6 +24,7 @@ import FlashSale from './FlashSale';
 const Home = () => {
   const navigate = useNavigate();
   const isLoggedIn = isAuthenticated();
+
   const [products, setProducts] = useState([]);
   const [banners, setBanners] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -27,6 +33,12 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // === PHÂN TRANG ===
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 12;
+
+  // === TẢI DỮ LIỆU ===
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
@@ -44,66 +56,40 @@ const Home = () => {
         setLoading(false);
       }
     };
-
     fetchAllData();
-  }, [isLoggedIn, selectedCategory]);
+  }, [isLoggedIn, currentPage, selectedCategory, searchTerm]);
 
+  // === LẤY SẢN PHẨM THEO TRANG ===
   const fetchProducts = async () => {
     try {
-      // Gọi API với categoryId nếu có
-      const firstResponse = await API.get('/Products/GetAll', {
+      const response = await API.get('/Products/GetAll', {
         params: {
-          pageNumber: 1,
-          pageSize: 12,
+          pageNumber: currentPage,
+          pageSize: pageSize,
           sortBy: 'CreatedAt',
           sortOrder: 'desc',
           categoryId: selectedCategory || undefined,
-          brandId: undefined, // Có thể thêm lọc thương hiệu sau
+          searchTerm: searchTerm || undefined,
         },
-        timeout: 5000,
+        timeout: 10000,
       });
-      console.log('First products response:', firstResponse.data);
 
-      const { totalPages, data: firstPageData } = firstResponse.data;
-      let allProducts = firstPageData || [];
-
-      // Lấy các trang còn lại nếu totalPages > 1
-      if (totalPages > 1) {
-        const pageRequests = [];
-        for (let page = 2; page <= totalPages; page++) {
-          pageRequests.push(
-            API.get('/Products/GetAll', {
-              params: {
-                pageNumber: page,
-                pageSize: 12,
-                sortBy: 'CreatedAt',
-                sortOrder: 'desc',
-                categoryId: selectedCategory || undefined,
-                brandId: undefined,
-              },
-              timeout: 5000,
-            })
-          );
-        }
-        const responses = await Promise.all(pageRequests);
-        responses.forEach(response => {
-          allProducts = allProducts.concat(response.data.data || []);
-        });
-      }
-
-      // Tính averageRating từ productReview
-      allProducts = allProducts.map(product => {
+      const { data, totalPages, totalItems } = response.data;
+      const productsWithRating = (data || []).map(product => {
         const reviews = Array.isArray(product.productReview) ? product.productReview : [];
-        const averageRating = reviews.length > 0
-          ? reviews.reduce((sum, review) => sum + (review.isActive ? review.rating : 0), 0) / reviews.filter(r => r.isActive).length
+        const activeReviews = reviews.filter(r => r.isActive);
+        const averageRating = activeReviews.length > 0
+          ? activeReviews.reduce((sum, r) => sum + r.rating, 0) / activeReviews.length
           : 0;
-        return { ...product, averageRating };
+        return { ...product, averageRating: parseFloat(averageRating.toFixed(1)) };
       });
 
-      setProducts(allProducts);
+      setProducts(productsWithRating);
+      setTotalPages(totalPages || 1);
     } catch (error) {
       console.error('Error fetching products:', error);
       setProducts([]);
+      setTotalPages(1);
       throw error;
     }
   };
@@ -111,11 +97,7 @@ const Home = () => {
   const fetchBanners = async () => {
     try {
       const response = await API.get('/Banner', { timeout: 5000 });
-      console.log('Banners response:', response.data);
-      let bannerArray = response.data;
-      if (response.data?.data) {
-        bannerArray = response.data.data;
-      }
+      const bannerArray = response.data?.data || response.data || [];
       setBanners(Array.isArray(bannerArray) ? bannerArray : []);
     } catch (error) {
       console.error('Error fetching banners:', error);
@@ -127,11 +109,7 @@ const Home = () => {
   const fetchCategories = async () => {
     try {
       const response = await API.get('/Categories', { timeout: 5000 });
-      console.log('Categories response:', response.data);
-      let categoryArray = response.data;
-      if (response.data?.data) {
-        categoryArray = response.data.data;
-      }
+      const categoryArray = response.data?.data || response.data || [];
       setCategories(Array.isArray(categoryArray) ? categoryArray : []);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -140,18 +118,22 @@ const Home = () => {
     }
   };
 
-  const filteredProducts = Array.isArray(products)
-    ? products.filter(product => {
-      const matchesSearch = product.productName?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = !selectedCategory || (product.categoryId == selectedCategory);
-      console.log('Filtering product:', product.productId, 'categoryId:', product.categoryId, 'selected:', selectedCategory, 'matches:', matchesCategory);
-      return matchesSearch && matchesCategory;
-    })
-    : [];
+  // === XỬ LÝ TÌM KIẾM ===
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset về trang 1
+  };
 
+  // === XỬ LÝ ĐỔI TRANG ===
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // === XỬ LÝ DANH MỤC ===
   const handleCategoryImageClick = (categoryId) => {
-    console.log('Navigating to category:', categoryId);
     setSelectedCategory(categoryId);
+    setCurrentPage(1);
     navigate(`/category/${categoryId}`);
   };
 
@@ -174,7 +156,7 @@ const Home = () => {
     slidesToScroll: 6,
     responsive: [
       { breakpoint: 1024, settings: { slidesToShow: 4, slidesToScroll: 4 } },
-      { breakpoint: 768, settings: { slidesToShow: 2, slidesToScroll: 2 } },
+      { breakpoint: 768, settings: { slidesToShow: 3, slidesToScroll: 3 } },
       { breakpoint: 480, settings: { slidesToShow: 2, slidesToScroll: 2 } }
     ],
     arrows: false,
@@ -190,7 +172,7 @@ const Home = () => {
   }
 
   return (
-    <div className={styles.container} >
+    <div className={styles.container}>
       {error && (
         <Box sx={{ bgcolor: 'error.main', color: 'white', p: 2, textAlign: 'center' }}>
           <Typography>{error}</Typography>
@@ -224,7 +206,6 @@ const Home = () => {
         </Box>
       </Container>
 
-
       <FlashSale />
 
       {/* Category Carousel */}
@@ -232,10 +213,10 @@ const Home = () => {
         <section className={styles.mainMenuCategories}>
           <div className={styles.listCates}>
             <Slider {...categorySliderSettings}>
-              {categories.map((category, index) => {
+              {categories.map((category) => {
                 const categoryId = category.id || category.categoryId;
                 return (
-                  <div key={categoryId || index} className={`${styles.cateItem} ${selectedCategory === categoryId ? styles.selected : ''}`}>
+                  <div key={categoryId} className={`${styles.cateItem} ${selectedCategory === categoryId ? styles.selected : ''}`}>
                     <a
                       href={`/category/${categoryId}`}
                       onClick={(e) => {
@@ -258,98 +239,108 @@ const Home = () => {
               })}
             </Slider>
           </div>
-          <div className={styles.pagesScroll}></div>
         </section>
-        {categories.length === 0 && !loading && (
-          <Box textAlign="center" p={4}>
-            <Typography color="error">Không có danh mục. Kiểm tra API /Categories.</Typography>
-          </Box>
-        )}
       </Container>
 
-      {/* Product Grid */}
+      {/* Product Grid + Pagination */}
       <Container maxWidth="lg">
         <Box className={styles.productGrid}>
-          {filteredProducts.length === 0 ? (
-            <Box style={{ textAlign: 'center', padding: '50px' }}>
-              <Typography variant="h6">Không có sản phẩm phù hợp</Typography>
-              <Button onClick={() => { setSearchTerm(''); setSelectedCategory(null); }} variant="outlined" sx={{ mt: 2 }}>
+
+          {products.length === 0 ? (
+            <Box textAlign="center" p={4}>
+              <Typography variant="h6">Không tìm thấy sản phẩm</Typography>
+              <Button onClick={() => { setSearchTerm(''); setSelectedCategory(null); setCurrentPage(1); }} variant="outlined" sx={{ mt: 2 }}>
                 Xóa bộ lọc
               </Button>
             </Box>
           ) : (
-            <ul className={styles.listproduct}>
-              {filteredProducts.map((product, index) => (
-                <li key={product.productId} className={styles.item} data-index={index + 1}>
-                  <a
-                    onClick={() => navigate(`/product-detail/${product.productId}`)}
-                    className={styles.mainContain}
-                  >
-                    <div className={styles.itemLabel}>
-                      {product.manufactureYear >= 2025 && <span className={styles.lnNew}>Mẫu mới</span>}
-                      <span className={styles.lbTragop}>Trả chậm 0% trả trước 0đ</span>
-                    </div>
-                    <div className={styles.itemImg}>
-                      <img
-                        className={styles.thumb}
-                        src={product.mainImage || '/placeholder-product.jpg'}
-                        alt={product.productName}
-                        loading="lazy"
-                        onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
-                      />
-                    </div>
-                    <p className={styles.resultLabel}>
-                      <img src="/images/promotion-icon.png" alt="Promotion" width="20" height="20" />
-                      <span>TRUNG THU GIẢM LỚN</span>
-                    </p>
-                    <h3>
-                      {product.productName}
-                      {product.manufactureYear >= 2025 && <span className={styles.newModel}>Mẫu mới</span>}
-                    </h3>
-                    <div className={styles.itemCompare}>
-                      {product.manufactureYear && <span>{product.manufactureYear}W</span>}
-                      <span>Có bơm trợ lực</span>
-                    </div>
-                    <p className={styles.itemTxtOnline}>
-                      <i></i>
-                      <span>Online giá rẻ quá</span>
-                    </p>
-                    <strong className={styles.price}>
-                      {product.sellPrice.toLocaleString('vi-VN')}₫
-                    </strong>
-                    {product.originalPrice > 0 && (
-                      <div className={styles.boxP}>
-                        <p className={styles.priceOld}>
-                          {product.originalPrice.toLocaleString('vi-VN')}₫
-                        </p>
-                        <span className={styles.percent}>
-                          {Math.round(((product.originalPrice - product.sellPrice) / product.originalPrice) * 100)}%
-                        </span>
+            <>
+              <ul className={styles.listproduct}>
+                {products.map((product, index) => (
+                  <li key={product.productId} className={styles.item}>
+                    <a onClick={() => navigate(`/product-detail/${product.productId}`)} className={styles.mainContain}>
+                      <div className={styles.itemLabel}>
+                        {product.manufactureYear >= 2025 && <span className={styles.lnNew}>Mẫu mới</span>}
+                        
                       </div>
-                    )}
-                    <p className={styles.itemGift}>
-                      Quà <b>70.000₫</b>
-                    </p>
-                  </a>
-                  <div className={styles.itemBottom}>
-                    <a href="javascript:;" className={styles.shiping} aria-label="shiping">
-                      <i className="bi bi-truck"></i>
+                      <div className={styles.itemImg}>
+                        <img
+                          className={styles.thumb}
+                          src={product.mainImage || '/placeholder-product.jpg'}
+                          alt={product.productName}
+                          loading="lazy"
+                          onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                        />
+                      </div>
+                      
+                      <h3>
+                        {product.productName}
+                        {product.manufactureYear >= 2025 && <span className={styles.newModel}>Mẫu mới</span>}
+                      </h3>
+                      <div className={styles.itemCompare}>
+                        {product.manufactureYear && <span>{product.manufactureYear}W</span>}
+                        
+                      </div>
+                      <p className={styles.itemTxtOnline}>
+                        <i></i>
+                        <span>Online giá rẻ quá</span>
+                      </p>
+                      <strong className={styles.price}>
+                        {product.sellPrice.toLocaleString('vi-VN')}₫
+                      </strong>
+                      {product.originalPrice > 0 && (
+                        <div className={styles.boxP}>
+                          <p className={styles.priceOld}>
+                            {product.originalPrice.toLocaleString('vi-VN')}₫
+                          </p>
+                          <span className={styles.percent}>
+                            {Math.round(((product.originalPrice - product.sellPrice) / product.originalPrice) * 100)}%
+                          </span>
+                        </div>
+                      )}
+                      <p className={styles.itemGift}>
+                        Quà <b>70.000₫</b>
+                      </p>
                     </a>
-                  </div>
-                  <div className={styles.ratingCompare}>
-                    <div className={styles.voteTxt}>
-                      <i></i>
-                      <b>{(product.averageRating || 0).toFixed(1)}</b>
+                    <div className={styles.itemBottom}>
+                      <a href="javascript:;" className={styles.shiping} aria-label="shiping">
+                        <i className="bi bi-truck"></i>
+                      </a>
                     </div>
-                    <span className={styles.stockCount}>• Tồn kho {product.stockQuantity.toLocaleString('vi-VN')}</span>
-                    <a href="javascript:;" className={styles.itemSs} onClick={(e) => e.stopPropagation()}>
-                      <i className="bi bi-arrow-left-right"></i>
-                      So sánh
-                    </a>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    <div className={styles.ratingCompare}>
+                      <div className={styles.voteTxt}>
+                        <i></i>
+                        <b>{product.averageRating || 0}</b>
+                      </div>
+                      <span className={styles.stockCount}>• Tồn kho {product.stockQuantity.toLocaleString('vi-VN')}</span>
+                      <a href="javascript:;" className={styles.itemSs} onClick={(e) => e.stopPropagation()}>
+                        <i className="bi bi-arrow-left-right"></i>
+                        So sánh
+                      </a>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              {/* PHÂN TRANG */}
+              {totalPages > 1 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, pb: 4 }}>
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={handlePageChange}
+                    color="primary"
+                    size="large"
+                    renderItem={(item) => (
+                      <PaginationItem
+                        slots={{ previous: ArrowBackIosIcon, next: ArrowForwardIosIcon }}
+                        {...item}
+                      />
+                    )}
+                  />
+                </Box>
+              )}
+            </>
           )}
         </Box>
       </Container>

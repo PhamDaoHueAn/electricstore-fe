@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Button, 
-  Box, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
+import {
+  Container,
+  Typography,
+  Button,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
   CircularProgress,
   IconButton,
   Avatar
@@ -20,53 +20,47 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import API from '../../services/api';
-import Cookies from 'js-cookie';
 import styles from './Cart.module.css';
+
+const GUEST_CART_KEY = 'guestCart';
 
 const Cart = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Làm mới token
-  const refreshToken = async () => {
-    const refreshToken = Cookies.get('refreshToken');
-    if (!refreshToken) throw new Error('No refresh token available');
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const getGuestCart = () => {
     try {
-      const response = await API.post('/Auth/refresh-token', { refreshToken });
-      Cookies.set('authToken', response.data.accessToken, {
-        secure: process.env.NODE_ENV === 'production',
-        expires: 7
-      });
-      return response.data.accessToken;
-    } catch (error) {
-      console.error('Refresh token failed:', error);
-      Cookies.remove('authToken');
-      Cookies.remove('refreshToken');
-      navigate('/login');
-      return null;
+      const saved = localStorage.getItem(GUEST_CART_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
     }
   };
 
-  // Gọi API với làm mới token
-  const withTokenRefresh = async (apiCall) => {
-    const token = Cookies.get('authToken');
-    if (!token) {
-      setError('Vui lòng đăng nhập để xem giỏ hàng.');
-      navigate('/login');
-      return null;
-    }
+  const saveGuestCart = (items) => {
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
+    window.dispatchEvent(new Event('cartUpdate')); // CẬP NHẬT HEADER
+  };
+
+  const callApi = async (apiCall) => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return null;
     try {
-      const response = await apiCall(token);
-      return response;
+      return await apiCall(token);
     } catch (error) {
-      if (error.response && error.response.status === 401) {
-        const newToken = await refreshToken();
-        if (newToken) {
-          const response = await apiCall(newToken);
-          return response;
-        }
+      if (error.response?.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        setIsLoggedIn(false);
+        window.dispatchEvent(new Event('authChange')); // KHÔNG RELOAD
       }
       throw error;
     }
@@ -75,193 +69,186 @@ const Cart = () => {
   useEffect(() => {
     const fetchCart = async () => {
       setLoading(true);
-      try {
-        const response = await withTokenRefresh((token) =>
-          API.get('/Cart', { headers: { Authorization: `Bearer ${token}` } })
-        );
-        if (response) {
-          console.log('Cart data:', response.data);
-          if (!Array.isArray(response.data)) {
-            throw new Error('Dữ liệu giỏ hàng không hợp lệ.');
-          }
-          setCartItems(response.data);
-        }
-      } catch (err) {
-        console.error('Lỗi lấy giỏ hàng:', err.response?.data || err.message);
-        setError(err.response?.status === 401 ? 'Vui lòng đăng nhập lại.' : 'Không thể tải giỏ hàng.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCart();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      setError('');
 
+      if (isLoggedIn) {
+        try {
+          const response = await callApi((token) =>
+            API.get('/Cart', { headers: { Authorization: `Bearer ${token}` } })
+          );
+          const data = Array.isArray(response?.data) ? response.data : [];
+          setCartItems(data);
+        } catch (err) {
+          console.error('Lỗi API:', err);
+          setError('Không thể tải giỏ hàng. Dùng giỏ khách.');
+          setCartItems(getGuestCart());
+        }
+      } else {
+        setCartItems(getGuestCart());
+      }
+
+      setLoading(false);
+    };
+
+    fetchCart();
+  }, [isLoggedIn]);
+
+  // Cập nhật số lượng
   const handleUpdateQuantity = async (productId, quantity) => {
     if (quantity < 1) return;
     setLoading(true);
-    setError('');
-    try {
-      await withTokenRefresh((token) =>
-        API.put('/Cart/update', { productId, quantity }, { headers: { Authorization: `Bearer ${token}` } })
-      );
-      setCartItems(cartItems.map(item =>
+
+    if (isLoggedIn) {
+      try {
+        await callApi((token) =>
+          API.put('/Cart/update', { productId, quantity }, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        );
+        setCartItems(prev => prev.map(item =>
+          item.productId === productId ? { ...item, quantity } : item
+        ));
+        window.dispatchEvent(new Event('cartUpdate'));
+      } catch {
+        setError('Cập nhật thất bại.');
+      }
+    } else {
+      const updated = cartItems.map(item =>
         item.productId === productId ? { ...item, quantity } : item
-      ));
-    } catch (err) {
-      console.error('Lỗi cập nhật số lượng:', err.response?.data || err.message);
-      setError('Không thể cập nhật số lượng.');
-    } finally {
-      setLoading(false);
+      );
+      setCartItems(updated);
+      saveGuestCart(updated);
     }
+    setLoading(false);
   };
 
+  // Xóa sản phẩm
   const handleRemoveItem = async (productId) => {
     setLoading(true);
-    setError('');
-    try {
-      await withTokenRefresh((token) =>
-        API.delete(`/Cart/remove/${productId}`, { headers: { Authorization: `Bearer ${token}` } })
-      );
-      setCartItems(cartItems.filter(item => item.productId !== productId));
-    } catch (err) {
-      console.error('Lỗi xóa sản phẩm:', err.response?.data || err.message);
-      setError('Không thể xóa sản phẩm.');
-    } finally {
-      setLoading(false);
+    if (isLoggedIn) {
+      try {
+        await callApi((token) =>
+          API.delete(`/Cart/remove/${productId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        );
+        setCartItems(prev => prev.filter(item => item.productId !== productId));
+        window.dispatchEvent(new Event('cartUpdate'));
+      } catch {
+        setError('Xóa thất bại.');
+      }
+    } else {
+      const updated = cartItems.filter(item => item.productId !== productId);
+      setCartItems(updated);
+      saveGuestCart(updated);
     }
+    setLoading(false);
   };
 
+  // Xóa toàn bộ
   const handleClearCart = async () => {
     setLoading(true);
-    setError('');
-    try {
-      await withTokenRefresh((token) =>
-        API.delete('/Cart/clear', { headers: { Authorization: `Bearer ${token}` } })
-      );
+    if (isLoggedIn) {
+      try {
+        await callApi((token) => API.delete('/Cart/clear', { headers: { Authorization: `Bearer ${token}` } }));
+        setCartItems([]);
+        window.dispatchEvent(new Event('cartUpdate'));
+      } catch {
+        setError('Xóa thất bại.');
+      }
+    } else {
       setCartItems([]);
-    } catch (err) {
-      console.error('Lỗi xóa giỏ hàng:', err.response?.data || err.message);
-      setError('Không thể xóa giỏ hàng.');
-    } finally {
-      setLoading(false);
+      localStorage.removeItem(GUEST_CART_KEY);
+      window.dispatchEvent(new Event('cartUpdate'));
     }
+    setLoading(false);
   };
 
+  // ĐI CHECKOUT – KHÔNG BẮT LOGIN
   const handleCheckout = () => {
-    navigate('/checkout', { replace: true });
+    navigate('/checkout'); // LUÔN ĐƯỢC PHÉP
   };
 
   const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.sellPrice * item.quantity || 0), 0)
-      .toLocaleString('vi-VN') + ' VNĐ';
+    const total = cartItems.reduce((sum, item) => sum + (item.sellPrice || 0) * (item.quantity || 1), 0);
+    return total.toLocaleString('vi-VN') + ' VNĐ';
   };
 
-  if (loading) {
-    return <CircularProgress className={styles.loading} />;
-  }
+  if (loading) return <CircularProgress className={-styles.loading} />;
 
   return (
     <Container maxWidth="lg" className={styles.container}>
-      <Box className={styles.container}>
-        <Typography variant="h4" className={styles.title}>
-          Giỏ Hàng
+      <Typography variant="h4" className={styles.title}>Giỏ Hàng</Typography>
+
+      {error && <Typography color="error" className={styles.error}>{error}</Typography>}
+
+      {cartItems.length === 0 ? (
+        <Typography className={styles.emptyCart}>
+          Giỏ hàng trống. <Button onClick={() => navigate('/')}>Mua sắm ngay!</Button>
         </Typography>
-        {error && (
-          <Typography color="error" variant="body2" className={styles.error}>
-            {error}
-          </Typography>
-        )}
-        {cartItems.length === 0 ? (
-          <Typography className={styles.emptyCart}>Giỏ hàng trống.</Typography>
-        ) : (
-          <>
-            <TableContainer component={Paper} className={styles.tableContainer}>
-              <Table className={styles.table}>
-                <TableHead className={styles.tableHead}>
-                  <TableRow>
-                    <TableCell className={styles.tableCell}>Hình ảnh</TableCell>
-                    <TableCell className={styles.tableCell}>Sản phẩm</TableCell>
-                    <TableCell align="right" className={styles.tableCell}>Giá</TableCell>
-                    <TableCell align="center" className={styles.tableCell}>Số lượng</TableCell>
-                    <TableCell align="right" className={styles.tableCell}>Tổng</TableCell>
-                    <TableCell align="center" className={styles.tableCell}>Hành động</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {cartItems.map((item) => (
-                    <TableRow key={item.productId}>
-                      <TableCell className={styles.tableCell}>
-                        <Avatar
-                          src={item.mainImage || '/placeholder-product.jpg'}
-                          alt={item.productName}
-                          variant="square"
-                          sx={{ width: 60, height: 60 }}
-                          onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
-                        />
-                      </TableCell>
-                      <TableCell className={styles.tableCell}>{item.productName || 'Không xác định'}</TableCell>
-                      <TableCell align="right" className={styles.tableCell}>{(item.sellPrice || 0).toLocaleString('vi-VN')} VNĐ</TableCell>
-                      <TableCell align="center" className={styles.tableCell}>
-                        <Box className={styles.quantityControl}>
-                          <IconButton
-                            onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
-                            disabled={loading || item.quantity <= 1}
-                            className={styles.quantityButton}
-                          >
-                            <RemoveIcon />
-                          </IconButton>
-                          <Typography className={styles.quantityText}>{item.quantity || 1}</Typography>
-                          <IconButton
-                            onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
-                            disabled={loading}
-                            className={styles.quantityButton}
-                          >
-                            <AddIcon />
-                          </IconButton>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="right" className={styles.tableCell}>
-                        {((item.sellPrice || 0) * (item.quantity || 1)).toLocaleString('vi-VN')} VNĐ
-                      </TableCell>
-                      <TableCell align="center" className={styles.tableCell}>
+      ) : (
+        <>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Hình</TableCell>
+                  <TableCell>Sản phẩm</TableCell>
+                  <TableCell align="right">Giá</TableCell>
+                  <TableCell align="center">SL</TableCell>
+                  <TableCell align="right">Tổng</TableCell>
+                  <TableCell align="center">Xóa</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {cartItems.map((item) => (
+                  <TableRow key={item.productId}>
+                    <TableCell>
+                      <Avatar src={item.mainImage} sx={{ width: 60, height: 60 }} variant="square" />
+                    </TableCell>
+                    <TableCell>{item.productName}</TableCell>
+                    <TableCell align="right">{(item.sellPrice || 0).toLocaleString('vi-VN')} VNĐ</TableCell>
+                    <TableCell align="center">
+                      <Box className={styles.quantityControl}>
                         <IconButton
-                          onClick={() => handleRemoveItem(item.productId)}
-                          disabled={loading}
-                          className={styles.deleteButton}
+                          onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
                         >
-                          <DeleteIcon />
+                          <RemoveIcon />
                         </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Box className={styles.actionRow}>
-              <Button
-                variant="outlined"
-                className={styles.clearButton}
-                onClick={handleClearCart}
-                disabled={loading || cartItems.length === 0}
-              >
-                Xóa toàn bộ giỏ hàng
+                        <Typography>{item.quantity}</Typography>
+                        <IconButton onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}>
+                          <AddIcon />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      {((item.sellPrice || 0) * item.quantity).toLocaleString('vi-VN')} VNĐ
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton onClick={() => handleRemoveItem(item.productId)} color="error">
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <Box className={styles.actionRow}>
+            <Button variant="outlined" onClick={handleClearCart} disabled={loading}>
+              Xóa toàn bộ
+            </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="h6">Tổng: {calculateTotal()}</Typography>
+              <Button variant="contained" onClick={handleCheckout} disabled={loading}>
+                Đặt hàng ngay
               </Button>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="h6" className={styles.totalText}>Tổng cộng: {calculateTotal()}</Typography>
-                <Button
-                  variant="contained"
-                  className={styles.checkoutButton}
-                  onClick={handleCheckout}
-                  disabled={loading || cartItems.length === 0}
-                >
-                  Đặt Hàng
-                </Button>
-              </Box>
             </Box>
-          </>
-        )}
-      </Box>
+          </Box>
+        </>
+      )}
     </Container>
   );
 };

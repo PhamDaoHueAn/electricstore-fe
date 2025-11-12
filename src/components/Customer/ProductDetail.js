@@ -12,8 +12,9 @@ import {
   Modal,
   TextField,
   Card,
-  CardMedia,
   CardContent,
+  CardMedia,
+  CircularProgress
 } from '@mui/material';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
@@ -22,9 +23,9 @@ import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import API from '../../services/api';
-import { isAuthenticated } from '../../services/auth';
-import { jwtDecode } from 'jwt-decode';
 import styles from './ProductDetail.module.css';
+
+const GUEST_CART_KEY = 'guestCart';
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -35,647 +36,526 @@ const ProductDetail = () => {
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [loadingRelated, setLoadingRelated] = useState(true);
-  const [errorProduct, setErrorProduct] = useState(null);
-  const [errorReviews, setErrorReviews] = useState(null);
-  const [errorRelated, setErrorRelated] = useState(null);
+  const [error, setError] = useState(null);
   const [reviewError, setReviewError] = useState(null);
   const sliderRef = useRef(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [openReviewModal, setOpenReviewModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewContent, setReviewContent] = useState('');
+  const [reviewName, setReviewName] = useState('');
+  const [reviewPhone, setReviewPhone] = useState('');
   const [editReviewId, setEditReviewId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Lấy userId từ token
-  const getUserIdFromToken = () => {
+  // === KIỂM TRA ĐĂNG NHẬP ===
+  useEffect(() => {
     const token = localStorage.getItem('accessToken');
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        console.log('Decoded token:', decoded);
-        return decoded.AccountID || decoded.sub || null;
-      } catch (error) {
-        console.error('Invalid token:', error);
-        return null;
-      }
+    setIsLoggedIn(!!token);
+  }, []);
+
+  // === GIỎ HÀNG KHÁCH ===
+  const getGuestCart = () => {
+    try {
+      const saved = localStorage.getItem(GUEST_CART_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
     }
-    return null;
   };
 
-  // Làm mới token
-  const refreshToken = useCallback(async () => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) {
-      console.error('No refresh token available');
-      throw new Error('No refresh token available');
-    }
-    try {
-      const response = await API.post('/Auth/refresh-token', { refreshToken }, { timeout: 5000 });
-      console.log('Refresh token response:', response.data);
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
-      return response.data.accessToken;
-    } catch (error) {
-      console.error('Refresh token failed:', error.response?.data || error.message);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      window.dispatchEvent(new Event('authChange'));
-      navigate('/login');
-      throw error;
-    }
-  }, [navigate]);
+  const saveGuestCart = (items) => {
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
+  };
 
-  // Kiểm tra và làm mới token trước khi gửi yêu cầu
-  const withTokenRefresh = useCallback(async (apiCall) => {
-    if (!isAuthenticated()) {
-      navigate('/login');
-      return null;
-    }
-    const token = localStorage.getItem('accessToken');
-    try {
-      return await apiCall(token);
-    } catch (error) {
-      if (error.response?.status === 401) {
-        const newToken = await refreshToken();
-        if (newToken) {
-          return await apiCall(newToken);
-        }
-      }
-      throw error;
-    }
-  }, [navigate, refreshToken]);
-
-  // Fetch sản phẩm
+  // === FETCH SẢN PHẨM ===
   const fetchProduct = useCallback(async () => {
     setLoadingProduct(true);
+    setError(null);
     try {
-      const response = await API.get(`/Products/${productId}`, { timeout: 5000 });
-      if (!response.data || Object.keys(response.data).length === 0) {
-        throw new Error('Sản phẩm không tồn tại');
-      }
+      const response = await API.get(`/Products/${productId}`);
+      if (!response.data) throw new Error('Sản phẩm không tồn tại');
       setProduct(response.data);
     } catch (err) {
-      setErrorProduct(err.response?.data?.message || 'Không thể tải sản phẩm. Vui lòng thử lại.');
-      console.error('Fetch product error:', err.response?.data || err.message);
-      setProduct(null);
+      setError('Không thể tải sản phẩm. Vui lòng thử lại.');
+      console.error('Lỗi fetch product:', err);
     } finally {
       setLoadingProduct(false);
     }
   }, [productId]);
 
-  // Fetch đánh giá
+  // === FETCH ĐÁNH GIÁ ===
   const fetchReviews = useCallback(async () => {
     setLoadingReviews(true);
     try {
-      const response = await API.get(`/ProductReview/ByProduct/${productId}`, { timeout: 5000 });
+      const response = await API.get(`/ProductReview/ByProduct/${productId}`);
       const data = Array.isArray(response.data) ? response.data : [];
-      setReviews(data);
-      setErrorReviews(data.length === 0 ? 'Sản phẩm chưa có đánh giá.' : null);
+      setReviews(data.filter(r => r.isActive));
     } catch (err) {
-      setErrorReviews('Sản phẩm chưa có đánh giá.');
-      console.error('Fetch reviews error:', err.response?.data || err.message);
+      console.error('Lỗi fetch reviews:', err);
       setReviews([]);
     } finally {
       setLoadingReviews(false);
     }
   }, [productId]);
 
-  // Fetch sản phẩm tương tự
+  // === FETCH SẢN PHẨM LIÊN QUAN ===
   const fetchRelatedProducts = useCallback(async () => {
     if (!product) return;
     setLoadingRelated(true);
     try {
-      const response = await API.get('/Products/GetAll', { timeout: 5000 });
-      if (response.data && Array.isArray(response.data.data)) {
+      const response = await API.get('/Products/GetAll', {
+        params: { pageNumber: 1, pageSize: 20 }
+      });
+      if (response.data?.data) {
         const filtered = response.data.data
-          .filter(
-            (p) =>
-              p.productId !== parseInt(productId) &&
-              p.categoryName === product.categoryName
+          .filter(p => 
+            p.productId !== parseInt(productId) && 
+            p.categoryId === product.categoryId
           )
           .slice(0, 4);
         setRelatedProducts(filtered);
-        setErrorRelated(filtered.length === 0 ? 'Không tìm thấy sản phẩm tương tự.' : null);
-      } else {
-        setRelatedProducts([]);
-        setErrorRelated('Không tìm thấy sản phẩm tương tự.');
       }
-    } catch (error) {
-      setErrorRelated('Không thể tải sản phẩm tương tự.');
-      console.error('Error fetching related products:', error.response?.data || error.message);
+    } catch (err) {
+      console.error('Lỗi fetch related:', err);
       setRelatedProducts([]);
     } finally {
       setLoadingRelated(false);
     }
   }, [productId, product]);
 
+  // === TẢI DỮ LIỆU ===
   useEffect(() => {
     fetchProduct();
     fetchReviews();
-  }, [productId, fetchProduct, fetchReviews]);
+  }, [fetchProduct, fetchReviews]);
 
   useEffect(() => {
-    if (product) {
-      fetchRelatedProducts();
-    }
+    if (product) fetchRelatedProducts();
   }, [product, fetchRelatedProducts]);
 
-  const sliderSettings = {
-    dots: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: true,
-    beforeChange: (oldIndex, newIndex) => setCurrentSlide(newIndex),
+  // === THÊM VÀO GIỎ ===
+  const addToCart = (quantity = 1) => {
+    const guestCart = getGuestCart();
+    const existing = guestCart.find(i => i.productId === parseInt(productId));
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      guestCart.push({
+        productId: parseInt(productId),
+        productName: product.productName,
+        mainImage: product.mainImage,
+        sellPrice: product.sellPrice,
+        quantity
+      });
+    }
+    saveGuestCart(guestCart);
+    window.dispatchEvent(new Event('cartUpdate'));
+    return true;
   };
 
   const handleAddToCart = async () => {
-    if (!isAuthenticated()) {
-      alert('Vui lòng đăng nhập để thêm vào giỏ hàng!');
-      navigate('/login');
-      return;
-    }
-    try {
-      const response = await withTokenRefresh((token) =>
-        API.post(
-          '/Cart/add',
-          { productId: parseInt(productId), quantity: 1 },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-      );
-      console.log('Add to cart response:', response.data);
+    if (isLoggedIn) {
+      try {
+        await API.post('/Cart/add', { productId: parseInt(productId), quantity: 1 }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+        });
+        alert('Đã thêm vào giỏ hàng!');
+        window.dispatchEvent(new Event('cartUpdate'));
+      } catch (err) {
+        alert('Lỗi khi thêm vào giỏ!');
+      }
+    } else {
+      addToCart(1);
       alert('Đã thêm vào giỏ hàng!');
-      window.dispatchEvent(new Event('authChange')); // Cập nhật giỏ hàng trong Header
-    } catch (error) {
-      console.error('Error adding to cart:', error.response?.data || error.message);
-      alert('Đã xảy ra lỗi khi thêm vào giỏ hàng!');
     }
   };
 
   const handleBuyNow = async () => {
-    if (!isAuthenticated()) {
-      alert('Vui lòng đăng nhập để mua ngay!');
-      navigate('/login');
-      return;
-    }
-    try {
-      const response = await withTokenRefresh((token) =>
-        API.post(
-          '/Cart/add',
-          { productId: parseInt(productId), quantity: 1 },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-      );
-      console.log('Buy now response:', response.data);
-      navigate('/checkout');
-    } catch (error) {
-      console.error('Error adding to cart for buy now:', error.response?.data || error.message);
-      alert('Đã xảy ra lỗi khi xử lý mua ngay!');
-    }
-  };
-
-  const handleThumbnailClick = (index) => {
-    setCurrentSlide(index);
-    sliderRef.current.slickGoTo(index);
-  };
-
-  // Kiểm tra xem người dùng đã đánh giá chưa
-  const userId = getUserIdFromToken();
-  const hasReviewed = userId && reviews.some((review) => review.userId === userId && review.isActive);
-
-  // Mở modal để viết hoặc sửa đánh giá
-  const handleOpenReviewModal = (review = null) => {
-    if (!isAuthenticated()) {
-      alert('Vui lòng đăng nhập để viết đánh giá!');
-      navigate('/login');
-      return;
-    }
-    if (review) {
-      setEditReviewId(review.reviewId);
-      setReviewRating(review.rating);
-      setReviewContent(review.content);
-    } else if (hasReviewed) {
-      alert('Bạn đã đánh giá sản phẩm này. Chỉ có thể sửa đánh giá!');
-      const userReview = reviews.find((r) => r.userId === userId && r.isActive);
-      if (userReview) handleOpenReviewModal(userReview);
-      return;
+    if (isLoggedIn) {
+      try {
+        await API.post('/Cart/add', { productId: parseInt(productId), quantity: 1 }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+        });
+        window.dispatchEvent(new Event('cartUpdate'));
+        navigate('/checkout');
+      } catch {
+        alert('Lỗi khi thêm vào giỏ!');
+      }
     } else {
-      setEditReviewId(null);
-      setReviewRating(0);
-      setReviewContent('');
+      addToCart(1);
+      window.dispatchEvent(new Event('cartUpdate'));
+      navigate('/checkout');
     }
+  };
+
+  // === VIẾT ĐÁNH GIÁ ===
+  const handleOpenReviewModal = () => {
+    setEditReviewId(null);
+    setReviewRating(0);
+    setReviewContent('');
+    setReviewName('');
+    setReviewPhone('');
+    setReviewError(null);
     setOpenReviewModal(true);
   };
 
-  // Đóng modal
   const handleCloseReviewModal = () => {
     setOpenReviewModal(false);
-    setReviewRating(0);
-    setReviewContent('');
-    setEditReviewId(null);
-    setReviewError(null);
   };
 
-  // Gửi đánh giá mới
+  const validatePhone = (phone) => /^0[3|5|7|8|9][0-9]{8}$/.test(phone.replace(/\D/g, ''));
+
   const handleSubmitReview = async () => {
-    if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
-      setReviewError('Vui lòng chọn đánh giá từ 1 đến 5');
-      return;
-    }
-    if (!reviewContent.trim()) {
-      setReviewError('Vui lòng nhập nội dung đánh giá');
-      return;
-    }
+    if (reviewRating < 1) return setReviewError('Vui lòng chọn số sao');
+    if (!reviewContent.trim()) return setReviewError('Vui lòng nhập nội dung');
+    if (!reviewName.trim()) return setReviewError('Vui lòng nhập họ tên');
+    if (!validatePhone(reviewPhone)) return setReviewError('SĐT không hợp lệ');
 
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('ProductId', parseInt(productId));
-      formData.append('Rating', parseInt(reviewRating));
+      formData.append('ProductId', productId);
+      formData.append('Rating', reviewRating);
       formData.append('Content', reviewContent.trim());
+      formData.append('Name', reviewName.trim());
+      formData.append('Phone', reviewPhone.replace(/\D/g, ''));
       formData.append('ParentID', 0);
 
-      console.log('Sending review data:', {
-        ProductId: parseInt(productId),
-        Rating: parseInt(reviewRating),
-        Content: reviewContent.trim(),
-        ParentID: 0,
-      });
-
-      const response = await withTokenRefresh((token) =>
-        API.post('/api/ProductReview/create', formData, {
-          headers: {
+      let response;
+      if (isLoggedIn) {
+        response = await API.post('/api/ProductReview/create', formData, {
+          headers: { 
             'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      );
-      console.log('Create review response:', response.data);
-      alert('Đánh giá thành công!');
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        });
+      } else {
+        response = await API.post('/api/ProductReview/guest', formData);
+      }
+
       setReviews([...reviews, response.data]);
+      alert('Gửi đánh giá thành công!');
       handleCloseReviewModal();
-    } catch (error) {
-      console.error('Error creating review:', error.response?.data || error.message);
-      setReviewError(
-        error.response?.data?.message || 'Không thể gửi đánh giá. Vui lòng thử lại.'
-      );
+    } catch (err) {
+      setReviewError('Không thể gửi đánh giá. Vui lòng thử lại.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Cập nhật đánh giá
-  const handleUpdateReview = async () => {
-    if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
-      setReviewError('Vui lòng chọn đánh giá từ 1 đến 5');
-      return;
-    }
-    if (!reviewContent.trim()) {
-      setReviewError('Vui lòng nhập nội dung đánh giá');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append('Rating', parseInt(reviewRating));
-      formData.append('Content', reviewContent.trim());
-
-      console.log('Updating review data:', {
-        Rating: parseInt(reviewRating),
-        Content: reviewContent.trim(),
-      });
-
-      const response = await withTokenRefresh((token) =>
-        API.put(`/api/ProductReview/${editReviewId}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      );
-      console.log('Update review response:', response.data);
-      alert('Cập nhật đánh giá thành công!');
-      setReviews(reviews.map((r) => (r.reviewId === editReviewId ? response.data : r)));
-      handleCloseReviewModal();
-    } catch (error) {
-      console.error('Error updating review:', error.response?.data || error.message);
-      setReviewError(
-        error.response?.data?.message || 'Không thể cập nhật đánh giá. Vui lòng thử lại.'
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+  // === XỬ LÝ HÌNH ẢNH ===
+  const getImageUrl = (url) => {
+    if (!url) return '/placeholder-product.jpg';
+    if (url.startsWith('http')) return url;
+    return `https://localhost:7248${url}`;
   };
 
+  // === LOADING & ERROR ===
   if (loadingProduct) {
     return (
-      <Container maxWidth="lg" className={styles.loading}>
-        <Typography variant="h6">Đang tải sản phẩm...</Typography>
+      <Container sx={{ textAlign: 'center', py: 8 }}>
+        <CircularProgress />
+        <Typography sx={{ mt: 2 }}>Đang tải sản phẩm...</Typography>
       </Container>
     );
   }
 
-  if (errorProduct || !product) {
+  if (error || !product) {
     return (
-      <Container maxWidth="lg" className={styles.error}>
-        <Typography variant="h6" color="error">
-          {errorProduct || 'Sản phẩm không tồn tại.'}
-        </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/')}
-          sx={{ mt: 2 }}
-        >
-          Quay lại trang chủ
-        </Button>
+      <Container sx={{ textAlign: 'center', py: 8 }}>
+        <Typography color="error">{error || 'Sản phẩm không tồn tại'}</Typography>
+        <Button onClick={() => navigate('/')} sx={{ mt: 2 }}>Quay lại trang chủ</Button>
       </Container>
     );
   }
 
-  const { productName, sellPrice, originalPrice, mainImage, subImages, description, brandName, categoryName, manufactureYear, stockQuantity } = product;
-  const discountPercent = originalPrice > sellPrice ? Math.round(((originalPrice - sellPrice) / originalPrice) * 100) : 0;
-  const descriptionPoints = description ? description.split(', ').map(item => item.trim()) : [];
-  const images = [mainImage, ...(subImages || [])];
+  // === DỮ LIỆU SẢN PHẨM ===
+  const {
+    productName, sellPrice, originalPrice, mainImage, subImages, description,
+    brandName, categoryName, manufactureYear, stockQuantity, productReview
+  } = product;
 
-  const averageRating = reviews.length > 0 && reviews.some(r => r.isActive)
-    ? reviews.reduce((sum, review) => sum + (review.isActive ? review.rating : 0), 0) / reviews.filter(r => r.isActive).length
+  const discountPercent = originalPrice > sellPrice
+    ? Math.round(((originalPrice - sellPrice) / originalPrice) * 100)
+    : 0;
+
+  // === XỬ LÝ DESCRIPTION (OBJECT → ARRAY) ===
+  const descriptionPoints = (() => {
+    if (!description) return [];
+    if (typeof description === 'object' && !Array.isArray(description)) {
+      return Object.entries(description).map(([key, value]) => `${key}: ${value}`);
+    }
+    if (typeof description === 'string') {
+      return description.split(', ').map(i => i.trim()).filter(Boolean);
+    }
+    return [];
+  })();
+
+  const images = [mainImage, ...(subImages || [])].filter(Boolean);
+
+  const averageRating = productReview && productReview.length > 0
+    ? productReview.reduce((s, r) => s + (r.isActive ? r.rating : 0), 0) / productReview.filter(r => r.isActive).length
     : 0;
 
   return (
     <Container maxWidth="lg" className={styles.container}>
       <CssBaseline />
       <Box sx={{ my: 4 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/')}
-          sx={{ mb: 2, color: '#0560e7' }}
-        >
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mb: 2 }}>
           Quay lại
         </Button>
-        <Grid container spacing={4}>
-          {/* Hình Ảnh */}
-          <Grid item xs={12} md={6}>
-            <Paper elevation={2} className={styles.imageContainer}>
-              <Slider {...sliderSettings} ref={sliderRef}>
-                {images.map((img, index) => (
-                  <div key={index}>
-                    <img
-                      src={img || '/placeholder-product.jpg'}
-                      alt={`${productName} ${index + 1}`}
-                      className={styles.mainImage}
-                      loading="lazy"
-                      onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
-                    />
-                  </div>
-                ))}
-              </Slider>
-              <Box className={styles.sliderImg}>
-                {images.map((img, index) => (
-                  <Box
-                    key={index}
-                    className={`${styles.sliderBox} ${currentSlide === index ? styles.active : ''}`}
-                    onClick={() => handleThumbnailClick(index)}
-                  >
-                    <img
-                      src={img || '/placeholder-product.jpg'}
-                      alt={`${productName} thumbnail ${index + 1}`}
-                      className={styles.thumbnailImage}
-                      loading="lazy"
-                      onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
-                    />
-                  </Box>
-                ))}
-              </Box>
-            </Paper>
-          </Grid>
 
-          {/* Thông Tin Sản Phẩm */}
+        <Grid container spacing={4}>
+          {/* HÌNH ẢNH */}
+          {/* HÌNH ẢNH – DÙNG LẠI PHIÊN BẢN CŨ (HOẠT ĐỘNG MƯỢT) */}
+<Grid item xs={12} md={6}>
+  <Paper elevation={2}>
+    <Slider
+      ref={sliderRef}
+      dots={false}
+      infinite={images.length > 1}
+      speed={500}
+      slidesToShow={1}
+      arrows={images.length > 1}
+      afterChange={(index) => setCurrentSlide(index)}
+    >
+      {images.map((img, i) => (
+        <img
+          key={i}
+          src={getImageUrl(img)}
+          alt={`${productName} ${i + 1}`}
+          className={styles.mainImage}
+          onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+        />
+      ))}
+    </Slider>
+
+    {/* THUMBNAIL NGANG – DÙNG LẠI CŨ */}
+    <Box className={styles.sliderImg}>
+      {images.map((img, i) => (
+        <Box
+          key={i}
+          className={`${styles.sliderBox} ${currentSlide === i ? styles.active : ''}`}
+          onClick={() => sliderRef.current?.slickGoTo(i)}
+        >
+          <img
+            src={getImageUrl(img)}
+            alt={`Thumb ${i + 1}`}
+            className={styles.thumbnailImage}
+            onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+          />
+        </Box>
+      ))}
+    </Box>
+  </Paper>
+</Grid>
+
+          {/* THÔNG TIN */}
           <Grid item xs={12} md={6}>
-            <Typography variant="h4" className={styles.productTitle}>
-              {productName}
-              {manufactureYear >= 2025 && <span className={styles.newModel}>Mẫu mới</span>}
-            </Typography>
-            <Box className={styles.rating}>
-              <Rating value={averageRating} readOnly precision={0.1} />
+            <Typography variant="h4" gutterBottom>{productName}</Typography>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Rating value={averageRating} readOnly precision={0.1} size="small" />
               <Typography variant="body2" color="text.secondary">
-                ({averageRating.toFixed(1)} • {reviews.filter(r => r.isActive).length} đánh giá • Đã bán {Math.max(1000 - stockQuantity, 0).toLocaleString('vi-VN')}k)
+                ({averageRating.toFixed(1)} • {productReview?.filter(r => r.isActive).length || 0} đánh giá)
               </Typography>
             </Box>
-            <Typography variant="h5" className={styles.price}>
+
+            <Typography variant="h5" className={styles.price} gutterBottom>
               {sellPrice.toLocaleString('vi-VN')}₫
             </Typography>
+
             {originalPrice > sellPrice && (
-              <Box className={styles.priceBox}>
-                <Typography variant="body2" className={styles.originalPrice}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Typography className={styles.originalPrice}>
                   {originalPrice.toLocaleString('vi-VN')}₫
                 </Typography>
-                <Typography variant="body2" className={styles.discount}>
-                  -{discountPercent}%
-                </Typography>
+                <Typography className={styles.discount}>-{discountPercent}%</Typography>
               </Box>
             )}
-            <Typography variant="body2" className={styles.gift}>
-              Quà tặng: <strong>70.000₫</strong>
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+
+            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
               <Button
                 variant="contained"
                 startIcon={<AddShoppingCartIcon />}
-                className={styles.addToCart}
                 onClick={handleAddToCart}
-                sx={{ py: 1.5, backgroundColor: '#0560e7', '&:hover': { backgroundColor: '#004ba0' } }}
+                size="large"
+                fullWidth
               >
-                Thêm vào giỏ hàng
+                Thêm vào giỏ
               </Button>
               <Button
                 variant="contained"
                 startIcon={<ShoppingCartCheckoutIcon />}
                 onClick={handleBuyNow}
-                sx={{ py: 1.5, backgroundColor: '#d32f2f', '&:hover': { backgroundColor: '#b71c1c' } }}
+                size="large"
+                fullWidth
+                sx={{ backgroundColor: '#d32f2f', '&:hover': { bgcolor: '#b71c1c' } }}
               >
                 Mua ngay
               </Button>
             </Box>
+
             <Button
               variant="outlined"
-              onClick={() => handleOpenReviewModal()}
-              sx={{ mt: 2, color: '#0560e7', borderColor: '#0560e7' }}
+              onClick={handleOpenReviewModal}
+              sx={{ mb: 3 }}
+              fullWidth
             >
               Viết đánh giá
             </Button>
-          </Grid>
 
-          {/* Mô Tả & Thông Số */}
-          <Grid item xs={12}>
-            <Paper elevation={2} className={styles.details}>
-              <Typography variant="h6">Đặc điểm nổi bật</Typography>
-              <ul className={styles.descriptionList}>
-                {descriptionPoints.map((point, index) => (
-                  <li key={index}>{point}</li>
-                ))}
-              </ul>
-              <Typography variant="h6" sx={{ mt: 3 }}>
-                Thông số kỹ thuật
-              </Typography>
-              <Box className={styles.specs}>
-                <Typography>Thương hiệu: <strong>{brandName}</strong></Typography>
-                <Typography>Danh mục: <strong>{categoryName}</strong></Typography>
-                <Typography>Năm sản xuất: <strong>{manufactureYear}</strong></Typography>
-                <Typography>Kho: <strong>{stockQuantity} sản phẩm</strong></Typography>
+            {/* THÔNG SỐ KỸ THUẬT */}
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" gutterBottom>Thông số kỹ thuật</Typography>
+              <Box component="ul" sx={{ pl: 2, m: 0, '& li': { mb: 1 } }}>
+                {descriptionPoints.length > 0 ? (
+                  descriptionPoints.map((point, i) => (
+                    <Typography component="li" key={i} variant="body2" color="text.secondary">
+                      {point}
+                    </Typography>
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Không có thông tin mô tả.
+                  </Typography>
+                )}
               </Box>
-            </Paper>
-          </Grid>
+            </Box>
 
-          {/* Sản Phẩm Tương Tự */}
-          <Grid item xs={12}>
-            <Paper elevation={2} className={styles.details}>
-              <Typography variant="h6">Sản Phẩm Tương Tự</Typography>
-              {loadingRelated ? (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                  Đang tải sản phẩm tương tự...
-                </Typography>
-              ) : errorRelated || relatedProducts.length === 0 ? (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                  Không tìm thấy sản phẩm tương tự.
-                </Typography>
-              ) : (
-                <Grid container spacing={2} sx={{ mt: 2 }}>
-                  {relatedProducts.map((related) => (
-                    <Grid item xs={12} sm={6} md={3} key={related.productId}>
-                      <Card
-                        sx={{ cursor: 'pointer' }}
-                        onClick={() => navigate(`/product-detail/${related.productId}`)}
-                      >
-                        <CardMedia
-                          component="img"
-                          height="140"
-                          image={related.mainImage || '/placeholder-product.jpg'}
-                          alt={related.productName}
-                          loading="lazy"
-                          onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
-                        />
-                        <CardContent>
-                          <Typography variant="subtitle1" noWrap>
-                            {related.productName}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {related.sellPrice.toLocaleString('vi-VN')}₫
-                          </Typography>
-                          <Rating value={related.averageRating || 0} readOnly size="small" />
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Paper>
-          </Grid>
-
-          {/* Đánh Giá Sản Phẩm */}
-          <Grid item xs={12}>
-            <Paper elevation={2} className={styles.details}>
-              <Typography variant="h6">Đánh Giá Sản Phẩm</Typography>
-              {loadingReviews ? (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                  Đang tải đánh giá...
-                </Typography>
-              ) : errorReviews ? (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                  {errorReviews}
-                </Typography>
-              ) : (
-                <Box className={styles.reviews}>
-                  {reviews
-                    .filter(review => review.isActive)
-                    .map(review => (
-                      <Box key={review.reviewId} className={styles.reviewItem}>
-                        <Box className={styles.reviewHeader}>
-                          <Typography variant="subtitle2" fontWeight="bold">
-                            {review.name}
-                          </Typography>
-                          <Rating value={review.rating} readOnly size="small" />
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {new Date(review.createdAt).toLocaleDateString('vi-VN') === '01/01/0001'
-                            ? 'Không rõ'
-                            : new Date(review.createdAt).toLocaleDateString('vi-VN')}
-                        </Typography>
-                        <Typography variant="body1" sx={{ mt: 1 }}>
-                          {review.content}
-                        </Typography>
-                        {review.childReview && (
-                          <Box className={styles.childReview}>
-                            <Typography variant="subtitle2" fontWeight="bold">
-                              {review.childReview.name}
-                            </Typography>
-                            <Typography variant="body2">
-                              {review.childReview.content}
-                            </Typography>
-                          </Box>
-                        )}
-                        {userId === review.userId && (
-                          <Button
-                            variant="outlined"
-                            onClick={() => handleOpenReviewModal(review)}
-                            sx={{ mt: 1, color: '#0560e7', borderColor: '#0560e7' }}
-                          >
-                            Sửa đánh giá
-                          </Button>
-                        )}
-                      </Box>
-                    ))}
-                </Box>
-              )}
-            </Paper>
+            <Box sx={{ mt: 3, fontSize: '0.9rem', color: 'text.secondary' }}>
+              <Typography><strong>Thương hiệu:</strong> {brandName}</Typography>
+              <Typography><strong>Danh mục:</strong> {categoryName}</Typography>
+              <Typography><strong>Năm sản xuất:</strong> {manufactureYear}</Typography>
+              <Typography><strong>Tồn kho:</strong> {stockQuantity.toLocaleString('vi-VN')}</Typography>
+            </Box>
           </Grid>
         </Grid>
 
-        {/* Modal Đánh Giá */}
-        <Modal
-          open={openReviewModal}
-          onClose={handleCloseReviewModal}
-          aria-labelledby="review-modal-title"
-          className={styles.modal}
-        >
-          <Box sx={{ width: 400, bgcolor: 'background.paper', p: 3, borderRadius: 2 }}>
-            <Typography id="review-modal-title" variant="h6" component="h2" sx={{ mb: 2 }}>
-              {editReviewId ? 'Sửa đánh giá' : 'Viết đánh giá'}
-            </Typography>
-            {reviewError && (
-              <Typography color="error" sx={{ mb: 2 }}>
-                {reviewError}
-              </Typography>
-            )}
+        {/* ĐÁNH GIÁ */}
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h5" gutterBottom>Đánh giá sản phẩm</Typography>
+          {loadingReviews ? (
+            <Typography>Đang tải đánh giá...</Typography>
+          ) : reviews.length === 0 ? (
+            <Typography color="text.secondary">Chưa có đánh giá nào.</Typography>
+          ) : (
+            <Box sx={{ spaceY: 2 }}>
+              {reviews.map((review) => (
+                <Paper key={review.reviewId} sx={{ p: 2, mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography fontWeight="bold">{review.name}</Typography>
+                    <Rating value={review.rating} readOnly size="small" />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    {review.content}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                  </Typography>
+                </Paper>
+              ))}
+            </Box>
+          )}
+        </Box>
+
+        {/* SẢN PHẨM LIÊN QUAN */}
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h5" gutterBottom>Sản phẩm liên quan</Typography>
+          {loadingRelated ? (
+            <Typography>Đang tải...</Typography>
+          ) : relatedProducts.length === 0 ? (
+            <Typography color="text.secondary">Không có sản phẩm liên quan.</Typography>
+          ) : (
+            <Grid container spacing={2}>
+              {relatedProducts.map((p) => (
+                <Grid item xs={6} sm={4} md={3} key={p.productId}>
+                  <Card
+                    onClick={() => navigate(`/product-detail/${p.productId}`)}
+                    sx={{ cursor: 'pointer', height: '100%' }}
+                  >
+                    <CardMedia
+                      component="img"
+                      height="140"
+                      image={getImageUrl(p.mainImage)}
+                      alt={p.productName}
+                      onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                    />
+                    <CardContent>
+                      <Typography variant="body2" noWrap>{p.productName}</Typography>
+                      <Typography variant="h6" color="primary">
+                        {p.sellPrice.toLocaleString('vi-VN')}₫
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Box>
+
+        {/* MODAL VIẾT ĐÁNH GIÁ */}
+        <Modal open={openReviewModal} onClose={handleCloseReviewModal}>
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: { xs: '90%', sm: 500 },
+            bgcolor: 'background.paper',
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 4,
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>Viết đánh giá</Typography>
+            {reviewError && <Typography color="error" sx={{ mb: 2 }}>{reviewError}</Typography>}
+
             <Rating
               value={reviewRating}
-              onChange={(e, newValue) => setReviewRating(newValue)}
+              onChange={(e, v) => setReviewRating(v || 0)}
               precision={1}
               sx={{ mb: 2 }}
             />
+
+            <TextField
+              fullWidth
+              label="Họ và tên *"
+              value={reviewName}
+              onChange={(e) => setReviewName(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+
+            <TextField
+              fullWidth
+              label="Số điện thoại *"
+              value={reviewPhone}
+              onChange={(e) => setReviewPhone(e.target.value)}
+              placeholder="0912345678"
+              sx={{ mb: 2 }}
+            />
+
             <TextField
               fullWidth
               multiline
               rows={4}
+              label="Nội dung đánh giá *"
               value={reviewContent}
               onChange={(e) => setReviewContent(e.target.value)}
-              placeholder="Nhập nội dung đánh giá..."
               sx={{ mb: 2 }}
             />
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              <Button onClick={handleCloseReviewModal} variant="outlined" disabled={isSubmitting}>
-                Hủy
-              </Button>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', GAP: 1 }}>
+              <Button onClick={handleCloseReviewModal} disabled={isSubmitting}>Hủy</Button>
               <Button
-                onClick={editReviewId ? handleUpdateReview : handleSubmitReview}
+                onClick={handleSubmitReview}
                 variant="contained"
-                color="primary"
                 disabled={isSubmitting}
               >
-                {editReviewId ? 'Cập nhật' : 'Gửi'}
+                {isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá'}
               </Button>
             </Box>
           </Box>

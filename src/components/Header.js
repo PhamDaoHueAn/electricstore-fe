@@ -1,72 +1,160 @@
 import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Button, IconButton, TextField, Autocomplete, CircularProgress } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, IconButton, TextField, Autocomplete, CircularProgress, Menu, MenuItem } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { isAuthenticated } from '../services/auth';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import API from '../services/api';
 import styles from './Header.module.css';
+
+const GUEST_CART_KEY = 'guestCart';
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(isAuthenticated());
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [cartCount, setCartCount] = useState(0);
   const [username, setUsername] = useState('');
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-  // Fetch thông tin người dùng để lấy fullName
+  // === DROPDOWN DANH MỤC ===
+  const [categories, setCategories] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+
+  // === LẤY DANH MỤC ===
+  const fetchCategories = async () => {
+    setLoadingCategories(true);
+    try {
+      const response = await API.get('/Categories', { timeout: 5000 });
+      const categoryArray = response.data?.data || response.data || [];
+      setCategories(Array.isArray(categoryArray) ? categoryArray : []);
+    } catch (error) {
+      console.error('Lỗi lấy danh mục:', error);
+      setCategories([]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  // === MỞ/CLOSED DROPDOWN ===
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleCategoryClick = (categoryId) => {
+    handleMenuClose();
+    navigate(`/category/${categoryId}`);
+  };
+
+  // === LẤY GIỎ HÀNG KHÁCH ===
+  const getGuestCartCount = () => {
+    try {
+      const saved = localStorage.getItem(GUEST_CART_KEY);
+      if (!saved) return 0;
+      const cart = JSON.parse(saved);
+      return Array.isArray(cart) ? cart.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  // === LẤY THÔNG TIN NGƯỜI DÙNG ===
   const fetchUserProfile = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
     try {
       const response = await API.get('/Auth/get-my-profile', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
-        timeout: 5000,
+        headers: { Authorization: `Bearer ${token}` },
       });
       setUsername(response.data.fullName || 'User');
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Lỗi lấy profile:', error);
       if (error.response?.status === 401) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         setIsLoggedIn(false);
         setUsername('');
-        setCartCount(0);
-        navigate('/login');
-      } else {
-        setUsername('User');
+        updateCartCount();
+        window.dispatchEvent(new Event('authChange'));
       }
     }
   };
 
-  // Fetch số lượng sản phẩm trong giỏ hàng
+  // === LẤY SỐ LƯỢNG GIỎ HÀNG ===
   const fetchCartCount = async () => {
-    try {
-      const response = await API.get('/Cart', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
-        timeout: 5000,
-      });
-      const totalQuantity = Array.isArray(response.data)
-        ? response.data.reduce((sum, item) => sum + (item.quantity || 0), 0)
-        : 0;
-      setCartCount(totalQuantity);
-    } catch (error) {
-      console.error('Error fetching cart count:', error);
-      if (error.response?.status === 401) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        setIsLoggedIn(false);
-        setUsername('');
-        setCartCount(0);
-        navigate('/login');
-      } else {
-        setCartCount(0);
+    const token = localStorage.getItem('accessToken');
+
+    if (isLoggedIn && token) {
+      try {
+        const response = await API.get('/Cart', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const total = Array.isArray(response.data)
+          ? response.data.reduce((sum, item) => sum + (item.quantity || 0), 0)
+          : 0;
+        setCartCount(total);
+      } catch (error) {
+        console.error('Lỗi lấy giỏ:', error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          setIsLoggedIn(false);
+          setUsername('');
+          updateCartCount();
+          window.dispatchEvent(new Event('authChange'));
+        } else {
+          setCartCount(getGuestCartCount());
+        }
       }
+    } else {
+      setCartCount(getGuestCartCount());
     }
   };
 
-  // Fetch gợi ý tìm kiếm
+  // === CẬP NHẬT GIỎ ===
+  const updateCartCount = () => {
+    fetchCartCount();
+  };
+
+  // === THEO DÕI SỰ KIỆN ===
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const loggedIn = !!localStorage.getItem('accessToken');
+      setIsLoggedIn(loggedIn);
+      if (loggedIn) {
+        fetchUserProfile();
+        fetchCartCount();
+      } else {
+        setUsername('');
+        updateCartCount();
+      }
+    };
+
+    const handleCartUpdate = () => {
+      updateCartCount();
+    };
+
+    handleAuthChange();
+    fetchCategories(); // LẤY DANH MỤC KHI MỞ TRANG
+
+    window.addEventListener('authChange', handleAuthChange);
+    window.addEventListener('cartUpdate', handleCartUpdate);
+
+    return () => {
+      window.removeEventListener('authChange', handleAuthChange);
+      window.removeEventListener('cartUpdate', handleCartUpdate);
+    };
+  }, [location.pathname]);
+
+  // === TÌM KIẾM GỢI Ý ===
   const fetchSuggestions = async (query) => {
     if (!query.trim()) {
       setSuggestions([]);
@@ -74,47 +162,21 @@ const Header = () => {
     }
     setLoadingSuggestions(true);
     try {
-      const response = await API.get(`/Products/Search?search=${encodeURIComponent(query)}&sortBy=CreatedAt&sortOrder=desc&pageNumber=1&pageSize=5`, {
-        timeout: 5000,
-      });
-      console.log('Suggestions API response:', response.data);
+      const response = await API.get(`/Products/Search?search=${encodeURIComponent(query)}&sortBy=CreatedAt&sortOrder=desc&pageNumber=1&pageSize=5`);
       setSuggestions(response.data.data || []);
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
+      console.error('Lỗi tìm kiếm:', error);
       setSuggestions([]);
+    } finally {
+      setLoadingSuggestions(false);
     }
-    setLoadingSuggestions(false);
   };
 
-  // Xử lý đăng nhập và giỏ hàng
-  useEffect(() => {
-    const handleAuthChange = () => {
-      const loggedIn = isAuthenticated();
-      setIsLoggedIn(loggedIn);
-      if (loggedIn && location.pathname !== '/login') {
-        fetchUserProfile();
-        fetchCartCount();
-      } else {
-        setUsername('');
-        setCartCount(0);
-      }
-    };
-
-    handleAuthChange();
-    window.addEventListener('authChange', handleAuthChange);
-
-    return () => {
-      window.removeEventListener('authChange', handleAuthChange);
-    };
-  }, [location.pathname]);
-
-  // Xử lý thay đổi ô tìm kiếm
   const handleSearchChange = (event, value) => {
     setSearchTerm(value);
     fetchSuggestions(value);
   };
 
-  // Xử lý chọn gợi ý hoặc nhấn Enter
   const handleSearch = (event, value) => {
     if (event.key === 'Enter' || event.type === 'click' || value) {
       const query = value || searchTerm;
@@ -126,37 +188,89 @@ const Header = () => {
     }
   };
 
-  // Xử lý đăng xuất
+  // === ĐĂNG XUẤT ===
   const handleLogoutClick = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     setIsLoggedIn(false);
     setUsername('');
-    setCartCount(0);
+    setCartCount(getGuestCartCount());
     window.dispatchEvent(new Event('authChange'));
+    window.dispatchEvent(new Event('cartUpdate'));
     navigate('/login');
   };
 
   return (
     <AppBar position="static" className={styles.header}>
       <Toolbar>
-        <Typography
-          variant="h5"
-          component="a"
-          href="/"
-          onClick={(e) => {
-            e.preventDefault();
-            navigate('/');
-          }}
-          className={styles.logo}
-        >
-          Điện Máy Xanh
-        </Typography>
+        {/* Logo + Dropdown Danh mục */}
+        <div className={styles.logoSection}>
+          <Typography
+            variant="h5"
+            component="a"
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/');
+            }}
+            className={styles.logo}
+          >
+            Điện Máy Xanh
+          </Typography>
+
+          {/* Dropdown Danh mục */}
+          <Button
+            color="inherit"
+            onClick={handleMenuOpen}
+            className={styles.categoryButton}
+            endIcon={<ExpandMoreIcon />}
+            disabled={loadingCategories}
+          >
+            Danh mục
+          </Button>
+
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                minWidth: 200,
+                maxHeight: 400,
+                overflow: 'auto'
+              }
+            }}
+          >
+            {loadingCategories ? (
+              <MenuItem disabled>
+                <CircularProgress size={20} sx={{ mr: 1 }} /> Đang tải...
+              </MenuItem>
+            ) : categories.length === 0 ? (
+              <MenuItem disabled>Không có danh mục</MenuItem>
+            ) : (
+              categories.map((category) => {
+                const categoryId = category.id || category.categoryId;
+                return (
+                  <MenuItem
+                    key={categoryId}
+                    onClick={() => handleCategoryClick(categoryId)}
+                    className={styles.menuItem}
+                  >
+                    {category.categoryName}
+                  </MenuItem>
+                );
+              })
+            )}
+          </Menu>
+        </div>
+
+        {/* Tìm kiếm */}
         <div className={styles.searchContainer}>
           <div className={styles.searchBox}>
             <Autocomplete
               freeSolo
-              options={suggestions.map((product) => product.productName)}
+              options={suggestions.map(p => p.productName)}
               inputValue={searchTerm}
               onInputChange={handleSearchChange}
               onChange={handleSearch}
@@ -191,6 +305,8 @@ const Header = () => {
             </Button>
           </div>
         </div>
+
+        {/* Hành động người dùng */}
         <div className={styles.userActions}>
           {isLoggedIn && location.pathname !== '/login' ? (
             <>
@@ -211,31 +327,36 @@ const Header = () => {
               </Typography>
               <Button
                 variant="contained"
-                color="primary"
+                color="secondary"
                 onClick={handleLogoutClick}
                 className={styles.logoutButton}
               >
-                Đăng Xuất
+                Đăng xuất
               </Button>
             </>
           ) : (
             <Button
               variant="contained"
               color="primary"
-              href="/login"
+              onClick={() => navigate('/login')}
               className={styles.loginButton}
             >
               Đăng nhập
             </Button>
           )}
+
+          {/* Giỏ hàng */}
           <Button
             variant="contained"
             color="primary"
-            href="/cart"
+            onClick={() => navigate('/cart')}
             className={styles.cartButton}
             startIcon={<ShoppingCartIcon />}
           >
-            Giỏ hàng{cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
+            Giỏ hàng
+            {cartCount > 0 && (
+              <span className={styles.cartBadge}>{cartCount}</span>
+            )}
           </Button>
         </div>
       </Toolbar>
