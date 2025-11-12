@@ -5,6 +5,9 @@ import Register from './components/Auth/Register';
 import ForgotPassword from './components/Auth/ForgotPassword';
 import ChangePassword from './components/Auth/ChangePassword';
 import Dashboard from './components/Admin/Dashboard';
+import ProductsManagement from './components/Admin/ProductsManagement';
+import CategoryManagement from './components/Admin/CategoryManagement';
+import BrandManagement from './components/Admin/BrandManagement';
 import Home from './components/Customer/Home';
 import { isAuthenticated, isAdmin } from './services/auth';
 import ProductDetail from './components/Customer/ProductDetail';
@@ -42,31 +45,55 @@ function App() {
           <Route path="/order-success" element={<OrderSuccess />} />
 
           {/* PROTECTED ROUTES (BẮT BUỘC ĐĂNG NHẬP) */}
-          <Route 
-            path="/change-password" 
+          <Route
+            path="/change-password"
             element={
               <ProtectedRoute>
                 <ChangePassword />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/profile" 
+          <Route
+            path="/profile"
             element={
               <ProtectedRoute>
                 <Profile />
               </ProtectedRoute>
-            } 
+            }
           />
 
           {/* ADMIN ROUTES */}
-          <Route 
-            path="/admin/dashboard" 
+          <Route
+            path="/admin/dashboard"
             element={
               <ProtectedRoute adminOnly>
                 <Dashboard />
               </ProtectedRoute>
-            } 
+            }
+          />
+          <Route
+            path="/admin/products"
+            element={
+              <ProtectedRoute adminOnly>
+                <ProductsManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/categories"
+            element={
+              <ProtectedRoute adminOnly>
+                <CategoryManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/brands"
+            element={
+              <ProtectedRoute adminOnly>
+                <BrandManagement />
+              </ProtectedRoute>
+            }
           />
           {/* ... các route admin khác */}
         </Routes>
