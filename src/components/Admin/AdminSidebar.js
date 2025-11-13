@@ -19,7 +19,7 @@ const AdminSidebar = ({ open = true }) => {
     { text: 'Quản lý Sản phẩm', path: '/admin/products', icon: <Inventory />, color: '#ffffffff' },
     { text: 'Quản lý Khách hàng', path: '/admin/customers', icon: <People />, color: '#ffffffff' },
     { text: 'Quản lý Nhân viên', path: '/admin/employees', icon: <Group />, color: '#ffffffff' },
-    { text: 'Quản lý Hóa đơn', path: '/admin/orders', icon: <Receipt />, color: '#ffffffff' },
+    { text: 'Quản lý đơn hàng', path: '/admin/orders', icon: <Receipt />, color: '#ffffffff' },
     { text: 'Quản lý Danh mục', path: '/admin/categories', icon: <Category />, color: '#ffffffff' },
     { text: 'Quản lý Thương hiệu', path: '/admin/brands', icon: <BrandingWatermark />, color: '#ffffffff' }
   ];
@@ -90,7 +90,7 @@ const AdminSidebar = ({ open = true }) => {
                       '& .MuiListItemText-primary': {
                         color: active ? 'white' : 'rgba(255,255,255,0.8)',
                         fontWeight: active ? 'bold' : 'normal',
-                        fontSize: '1rem'
+                        fontSize: '0.85rem'
                       }
                     }}
                   />

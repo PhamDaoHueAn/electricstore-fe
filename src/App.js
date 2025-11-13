@@ -8,6 +8,8 @@ import Dashboard from './components/Admin/Dashboard';
 import ProductsManagement from './components/Admin/ProductsManagement';
 import CategoryManagement from './components/Admin/CategoryManagement';
 import BrandManagement from './components/Admin/BrandManagement';
+import OrderManagement from './components/Admin/OrderManagement';
+
 import Home from './components/Customer/Home';
 import { isAuthenticated, isAdmin } from './services/auth';
 import ProductDetail from './components/Customer/ProductDetail';
@@ -84,6 +86,14 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <CategoryManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <ProtectedRoute adminOnly>
+                <OrderManagement />
               </ProtectedRoute>
             }
           />

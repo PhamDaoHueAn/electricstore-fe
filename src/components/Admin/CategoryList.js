@@ -122,23 +122,7 @@ const CategoryList = () => {
         console.error('Error data:', err.response?.data);
 
         // Set fallback data để test UI
-        const fallbackData = [
-          {
-            categoryId: 1,
-            categoryName: "Máy lạnh",
-            imageUrl: "https://localhost:7248/Image/Category/may_lanh.jpg",
-            isActive: true
-          },
-          {
-            categoryId: 2,
-            categoryName: "Máy giặt",
-            imageUrl: "https://localhost:7248/Image/Category/may_giat.jpg",
-            isActive: true
-          }
-        ];
 
-        console.log('Using fallback data:', fallbackData);
-        setAllCategories(fallbackData);
       } finally {
         setLoading(false);
         console.log('Finished fetchCategories');

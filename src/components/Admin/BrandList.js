@@ -137,41 +137,7 @@ const BrandList = () => {
         console.error('Error data:', err.response?.data);
 
         // Set fallback data để test UI
-        const fallbackData = [
-          {
-            brandId: 1,
-            brandName: "Samsung",
-            imageUrl: "https://localhost:7248/Image/Brand/samsung.png",
-            isActive: true
-          },
-          {
-            brandId: 2,
-            brandName: "Panasonic",
-            imageUrl: "https://localhost:7248/Image/Brand/panasonic.png",
-            isActive: true
-          },
-          {
-            brandId: 3,
-            brandName: "Toshiba",
-            imageUrl: "https://localhost:7248/Image/Brand/toshiba.png",
-            isActive: true
-          },
-          {
-            brandId: 4,
-            brandName: "LG",
-            imageUrl: "https://localhost:7248/Image/Brand/lg.png",
-            isActive: true
-          },
-          {
-            brandId: 5,
-            brandName: "Aqua",
-            imageUrl: "https://localhost:7248/Image/Brand/aqua.png",
-            isActive: true
-          }
-        ];
 
-        console.log('Using fallback data:', fallbackData);
-        setAllBrands(fallbackData);
       } finally {
         setLoading(false);
         console.log('Finished fetchBrands');
