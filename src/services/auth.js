@@ -67,3 +67,16 @@ export const isAdmin = () => {
     return false;
   }
 };
+
+export const isAdminOrEmployee = () => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return false;
+  try {
+    const decoded = jwtDecode(token);
+    const role = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+    return role === 'Admin' || role === 'Employee';
+  } catch (error) {
+    console.error('Invalid token:', error);
+    return false;
+  }
+};

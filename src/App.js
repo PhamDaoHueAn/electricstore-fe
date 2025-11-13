@@ -10,10 +10,13 @@ import CategoryManagement from './components/Admin/CategoryManagement';
 import BrandManagement from './components/Admin/BrandManagement';
 import OrderManagement from './components/Admin/OrderManagement';
 import ReviewManagement from './components/Admin/ReviewManagement';
+import CustomerManagement from './components/Admin/CustomerManagement';
+import EmployeeManagement from './components/Admin/EmployeeManagement';
 
 import Home from './components/Customer/Home';
-import { isAuthenticated, isAdmin } from './services/auth';
+import { isAuthenticated, isAdmin, isAdminOrEmployee } from './services/auth';
 import ProductDetail from './components/Customer/ProductDetail';
+
 import Layout from './components/Layout';
 import Cart from './components/Customer/Cart';
 import Checkout from './components/Customer/Checkout';
@@ -22,9 +25,10 @@ import SearchResults from './components/Customer/SearchResults';
 import CategoryProducts from './components/Customer/CategoryProducts';
 import Profile from './components/Customer/Profile';
 
-const ProtectedRoute = ({ children, adminOnly }) => {
+const ProtectedRoute = ({ children, adminOnly, adminOrEmployee }) => {
   if (!isAuthenticated()) return <Navigate to="/login" replace />;
   if (adminOnly && !isAdmin()) return <Navigate to="/" replace />;
+  if (adminOrEmployee && !isAdminOrEmployee()) return <Navigate to="/" replace />;
   return children;
 };
 
@@ -65,11 +69,11 @@ function App() {
             }
           />
 
-          {/* ADMIN ROUTES */}
+          {/* ADMIN & EMPLOYEE ROUTES */}
           <Route
             path="/admin/dashboard"
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute adminOrEmployee>
                 <Dashboard />
               </ProtectedRoute>
             }
@@ -77,7 +81,7 @@ function App() {
           <Route
             path="/admin/products"
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute adminOrEmployee>
                 <ProductsManagement />
               </ProtectedRoute>
             }
@@ -85,32 +89,50 @@ function App() {
           <Route
             path="/admin/categories"
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute adminOrEmployee>
                 <CategoryManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/orders"
-            element={
-              <ProtectedRoute adminOnly>
-                <OrderManagement />
               </ProtectedRoute>
             }
           />
           <Route
             path="/admin/brands"
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute adminOrEmployee>
                 <BrandManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <ProtectedRoute adminOrEmployee>
+                <OrderManagement />
               </ProtectedRoute>
             }
           />
           <Route
             path="/admin/reviews"
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute adminOrEmployee>
                 <ReviewManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/customers"
+            element={
+              <ProtectedRoute adminOrEmployee>
+                <CustomerManagement />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ADMIN ONLY ROUTES */}
+          <Route
+            path="/admin/employees"
+            element={
+              <ProtectedRoute adminOnly>
+                <EmployeeManagement />
               </ProtectedRoute>
             }
           />
