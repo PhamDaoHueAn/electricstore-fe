@@ -9,6 +9,7 @@ import ProductsManagement from './components/Admin/ProductsManagement';
 import CategoryManagement from './components/Admin/CategoryManagement';
 import BrandManagement from './components/Admin/BrandManagement';
 import OrderManagement from './components/Admin/OrderManagement';
+import ReviewManagement from './components/Admin/ReviewManagement';
 
 import Home from './components/Customer/Home';
 import { isAuthenticated, isAdmin } from './services/auth';
@@ -102,6 +103,14 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <BrandManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/reviews"
+            element={
+              <ProtectedRoute adminOnly>
+                <ReviewManagement />
               </ProtectedRoute>
             }
           />

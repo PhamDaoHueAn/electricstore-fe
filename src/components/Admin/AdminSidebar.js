@@ -8,9 +8,9 @@ import {
   Group,
   Receipt,
   Category,
-  BrandingWatermark
+  BrandingWatermark,
+  RateReview
 } from '@mui/icons-material';
-
 const AdminSidebar = ({ open = true }) => {
   const location = useLocation();
 
@@ -21,7 +21,10 @@ const AdminSidebar = ({ open = true }) => {
     { text: 'Quản lý Nhân viên', path: '/admin/employees', icon: <Group />, color: '#ffffffff' },
     { text: 'Quản lý đơn hàng', path: '/admin/orders', icon: <Receipt />, color: '#ffffffff' },
     { text: 'Quản lý Danh mục', path: '/admin/categories', icon: <Category />, color: '#ffffffff' },
-    { text: 'Quản lý Thương hiệu', path: '/admin/brands', icon: <BrandingWatermark />, color: '#ffffffff' }
+    { text: 'Quản lý Thương hiệu', path: '/admin/brands', icon: <BrandingWatermark />, color: '#ffffffff' },
+    { text: 'Quản lý Đánh giá', path: '/admin/reviews', icon: <RateReview />, color: '#ffffffff' },
+
+
   ];
 
   const isActive = (path) => {
