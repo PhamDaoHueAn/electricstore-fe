@@ -33,6 +33,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [voucherCode, setVoucherCode] = useState('');
   const [usePoints, setUsePoints] = useState(false);
@@ -167,16 +168,32 @@ const Checkout = () => {
 
     setLoading(true);
     try {
-      const res = await callApi(t => API.get(`/Checkout/check-voucher/${voucherCode}`, {
-        headers: { Authorization: `Bearer ${t}` }
-      }));
-      setVoucherDiscount(res.data.discountAmount || 0);
+      const res = await API.get(`/Checkout/check-voucher/${voucherCode}`);
+      const voucher = res.data;
+
+      // Tính giảm giá dựa trên loại voucher
+      let discount = 0;
+      if (voucher.discountType === 'percent') {
+        discount = totalPrice * (voucher.discountValue / 100);
+      } else if (voucher.discountType === 'amount') {
+        discount = voucher.discountValue;
+      }
+
+      setVoucherDiscount(discount);
       setError(null);
+      setSuccessMessage(`Áp dụng voucher thành công! Giảm ${discount.toLocaleString('vi-VN')}₫`);
+
+      // Tính lại tổng tiền ngay lập tức
+      const pointsDiscount = usePoints ? usedPoints * 10000 : 0;
+      const final = totalPrice - discount - pointsDiscount;
+      setFinalPrice(final > 0 ? final : 0);
+
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Voucher không hợp lệ.');
+      setError(err.response?.data || 'Voucher không hợp lệ.');
       setVoucherDiscount(0);
-    } finally {
       calculateTotal(cartItems);
+    } finally {
       setLoading(false);
     }
   };
@@ -274,6 +291,7 @@ const Checkout = () => {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>Thành công! Đang chuyển hướng...</Alert>}
+      {successMessage && <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>}
 
       <Box sx={{ display: 'flex', gap: 4, flexDirection: { xs: 'column', lg: 'row' } }}>
         {/* Sản phẩm */}
@@ -332,8 +350,24 @@ const Checkout = () => {
                   <Checkbox
                     checked={usePoints}
                     onChange={e => {
-                      setUsePoints(e.target.checked);
-                      calculateTotal(cartItems);
+                      const checked = e.target.checked;
+                      setUsePoints(checked);
+
+                      if (checked) {
+                        const maxPoints = Math.floor(totalPrice / 10000);
+                        const pointsToUse = Math.min(userPoints, maxPoints);
+                        setUsedPoints(pointsToUse);
+                        setSuccessMessage(`Sử dụng ${pointsToUse} điểm! Giảm ${(pointsToUse * 10000).toLocaleString('vi-VN')}₫`);
+
+                        const final = totalPrice - voucherDiscount - (pointsToUse * 10000);
+                        setFinalPrice(final > 0 ? final : 0);
+                      } else {
+                        setUsedPoints(0);
+                        const final = totalPrice - voucherDiscount;
+                        setFinalPrice(final > 0 ? final : 0);
+                      }
+
+                      setTimeout(() => setSuccessMessage(null), 3000);
                     }}
                     disabled={userPoints === 0 || loading}
                   />
@@ -388,15 +422,52 @@ const Checkout = () => {
             </Select>
           </FormControl>
 
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Tổng kết</Typography>
-            <Typography>Giá gốc: {totalPrice.toLocaleString('vi-VN')}₫</Typography>
-            {voucherDiscount > 0 && <Typography color="success.main">- Voucher: -{voucherDiscount.toLocaleString('vi-VN')}₫</Typography>}
-            {usePoints && usedPoints > 0 && <Typography color="success.main">- Điểm ({usedPoints}): -{(usedPoints * 10000).toLocaleString('vi-VN')}₫</Typography>}
-            <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold', mt: 1 }}>
-              Tổng: {finalPrice.toLocaleString('vi-VN')}₫
-            </Typography>
-          </Box>
+          <Paper elevation={3} sx={{ p: 3, mb: 4, bgcolor: '#f5f5f5' }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Tổng kết đơn hàng</Typography>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography>Tạm tính:</Typography>
+              <Typography>{totalPrice.toLocaleString('vi-VN')}₫</Typography>
+            </Box>
+
+            {voucherDiscount > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography color="success.main">
+                  Giảm giá (Voucher {voucherCode}):
+                </Typography>
+                <Typography color="success.main" sx={{ fontWeight: 'bold' }}>
+                  -{voucherDiscount.toLocaleString('vi-VN')}₫
+                </Typography>
+              </Box>
+            )}
+
+            {usePoints && usedPoints > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography color="success.main">
+                  Giảm giá (Điểm tích lũy):
+                </Typography>
+                <Typography color="success.main" sx={{ fontWeight: 'bold' }}>
+                  -{(usedPoints * 10000).toLocaleString('vi-VN')}₫ ({usedPoints} điểm)
+                </Typography>
+              </Box>
+            )}
+
+            <Box sx={{ borderTop: '2px solid #ddd', mt: 2, pt: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                  Tổng thanh toán:
+                </Typography>
+                <Typography variant="h5" color="error" sx={{ fontWeight: 'bold' }}>
+                  {finalPrice.toLocaleString('vi-VN')}₫
+                </Typography>
+              </Box>
+              {(voucherDiscount > 0 || (usePoints && usedPoints > 0)) && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Bạn đã tiết kiệm được {((voucherDiscount || 0) + (usePoints ? usedPoints * 10000 : 0)).toLocaleString('vi-VN')}₫
+                </Typography>
+              )}
+            </Box>
+          </Paper>
 
           <Button
             variant="contained"
