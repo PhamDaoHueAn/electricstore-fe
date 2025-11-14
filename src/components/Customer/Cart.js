@@ -66,30 +66,31 @@ const Cart = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchCart = async () => {
-      setLoading(true);
-      setError('');
+  // Hàm load giỏ hàng (có thể gọi lại)
+  const fetchCart = async () => {
+    setLoading(true);
+    setError('');
 
-      if (isLoggedIn) {
-        try {
-          const response = await callApi((token) =>
-            API.get('/Cart', { headers: { Authorization: `Bearer ${token}` } })
-          );
-          const data = Array.isArray(response?.data) ? response.data : [];
-          setCartItems(data);
-        } catch (err) {
-          console.error('Lỗi API:', err);
-          setError('Không thể tải giỏ hàng. Dùng giỏ khách.');
-          setCartItems(getGuestCart());
-        }
-      } else {
+    if (isLoggedIn) {
+      try {
+        const response = await callApi((token) =>
+          API.get('/Cart', { headers: { Authorization: `Bearer ${token}` } })
+        );
+        const data = Array.isArray(response?.data) ? response.data : [];
+        setCartItems(data);
+      } catch (err) {
+        console.error('Lỗi API:', err);
+        setError('Không thể tải giỏ hàng. Dùng giỏ khách.');
         setCartItems(getGuestCart());
       }
+    } else {
+      setCartItems(getGuestCart());
+    }
 
-      setLoading(false);
-    };
+    setLoading(false);
+  };
 
+  useEffect(() => {
     fetchCart();
   }, [isLoggedIn]);
 
@@ -105,19 +106,32 @@ const Cart = () => {
             headers: { Authorization: `Bearer ${token}` }
           })
         );
-        setCartItems(prev => prev.map(item =>
-          item.productId === productId ? { ...item, quantity } : item
-        ));
+        // Load lại giỏ hàng để lấy giá FlashSale mới nhất
+        await fetchCart();
         window.dispatchEvent(new Event('cartUpdate'));
       } catch {
         setError('Cập nhật thất bại.');
       }
     } else {
-      const updated = cartItems.map(item =>
-        item.productId === productId ? { ...item, quantity } : item
-      );
-      setCartItems(updated);
-      saveGuestCart(updated);
+      try {
+        // Gọi API lấy giá FlashSale cho giỏ hàng khách
+        const priceResponse = await API.get(`/FlashSale/get-price-flashsale?productId=${productId}&quantity=${quantity}`);
+        const newPrice = priceResponse.data;
+
+        const updated = cartItems.map(item =>
+          item.productId === productId ? { ...item, quantity, sellPrice: newPrice } : item
+        );
+        setCartItems(updated);
+        saveGuestCart(updated);
+      } catch (err) {
+        console.error('Lỗi lấy giá FlashSale:', err);
+        // Nếu lỗi, vẫn cập nhật số lượng nhưng giữ nguyên giá
+        const updated = cartItems.map(item =>
+          item.productId === productId ? { ...item, quantity } : item
+        );
+        setCartItems(updated);
+        saveGuestCart(updated);
+      }
     }
     setLoading(false);
   };
@@ -132,7 +146,8 @@ const Cart = () => {
             headers: { Authorization: `Bearer ${token}` }
           })
         );
-        setCartItems(prev => prev.filter(item => item.productId !== productId));
+        // Load lại giỏ hàng để cập nhật FlashSale cho các sản phẩm còn lại
+        await fetchCart();
         window.dispatchEvent(new Event('cartUpdate'));
       } catch {
         setError('Xóa thất bại.');

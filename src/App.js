@@ -21,6 +21,7 @@ import Layout from './components/Layout';
 import Cart from './components/Customer/Cart';
 import Checkout from './components/Customer/Checkout';
 import OrderSuccess from './components/Customer/OrderSuccess';
+import VNPayReturn from './components/Customer/VNPayReturn';
 import SearchResults from './components/Customer/SearchResults';
 import CategoryProducts from './components/Customer/CategoryProducts';
 import Profile from './components/Customer/Profile';
@@ -50,6 +51,7 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/vnpay-return" element={<VNPayReturn />} />
 
           {/* PROTECTED ROUTES (BẮT BUỘC ĐĂNG NHẬP) */}
           <Route

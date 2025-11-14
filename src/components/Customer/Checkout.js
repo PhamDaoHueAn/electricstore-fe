@@ -199,14 +199,15 @@ const Checkout = () => {
       if (isLoggedIn) {
         // === ĐÃ ĐĂNG NHẬP: DÙNG API CŨ ===
         const checkoutData = {
-          fullName: fullName.trim(),
-          phoneNumber: phoneNumber.trim(),
-          address: address.trim(),
-          items: cartItems.map(i => ({ productId: i.productId, quantity: i.quantity })),
-          voucherCode: voucherCode.trim() || null,
+          FullName: fullName.trim(),
+          PhoneNumber: phoneNumber.trim(),
+          Address: address.trim(),
+          VoucherCode: voucherCode.trim() || null,
           usePoint: usePoints,
-          usedPoints
+          ReturnUrl: paymentMethod === 'vnpay' ? `${window.location.origin}/vnpay-return` : null
         };
+
+        console.log('[DEBUG] Checkout Data:', checkoutData);
 
         response = await callApi(t => API.post(
           paymentMethod === 'cod' ? '/Checkout/cod' : '/Checkout/CreateVnPayPayment',
@@ -225,15 +226,20 @@ const Checkout = () => {
           })),
           voucherCode: voucherCode.trim() || null,
           usePoint: false, // Khách không dùng điểm
-          method: paymentMethod.toUpperCase() // COD hoặc VNPAY
+          method: paymentMethod.toUpperCase(), // COD hoặc VNPAY
+          returnUrl: paymentMethod === 'vnpay' ? `${window.location.origin}/vnpay-return` : null
         };
 
         response = await API.post('/Checkout/Payment-without-login', paymentData);
       }
 
       // === XỬ LÝ KẾT QUẢ ===
-      if (response.data.paymentUrl) {
-        window.location.href = response.data.paymentUrl;
+      console.log('[DEBUG] API Response:', response.data);
+
+      if (response.data.paymentUrl || response.data.PaymentUrl) {
+        const url = response.data.paymentUrl || response.data.PaymentUrl;
+        console.log('[DEBUG] Redirecting to:', url);
+        window.location.href = url;
         return;
       }
 
