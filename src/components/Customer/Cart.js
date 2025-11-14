@@ -242,7 +242,7 @@ const Cart = () => {
             </Button>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Typography variant="h6">Tổng: {calculateTotal()}</Typography>
-              <Button variant="contained" onClick={handleCheckout} disabled={loading}>
+              <Button variant="contained" onClick={handleCheckout}>
                 Đặt hàng ngay
               </Button>
             </Box>

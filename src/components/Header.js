@@ -326,8 +326,7 @@ const Header = () => {
                 {username}
               </Typography>
               <Button
-                variant="contained"
-                color="secondary"
+                variant="contained"               
                 onClick={handleLogoutClick}
                 className={styles.logoutButton}
               >

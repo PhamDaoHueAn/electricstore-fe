@@ -160,7 +160,7 @@ const Checkout = () => {
     setFinalPrice(final > 0 ? final : 0);
   };
 
-  // === ÁP DỤNG VOUCHER ===
+  // === ÁP DỤNG VOUCHER (CHỈ NGƯỜI ĐĂNG NHẬP) ===
   const applyVoucher = async () => {
     if (!isLoggedIn) return setError('Vui lòng đăng nhập để dùng voucher.');
     if (!voucherCode.trim()) return setError('Nhập mã voucher.');
@@ -183,7 +183,8 @@ const Checkout = () => {
 
   // === XỬ LÝ THANH TOÁN ===
   const handleCheckout = async () => {
-    if (!isLoggedIn && (!fullName.trim() || !phoneNumber.trim() || !address.trim())) {
+    // VALIDATE THÔNG TIN
+    if (!fullName.trim() || !phoneNumber.trim() || !address.trim()) {
       return setError('Vui lòng nhập đầy đủ thông tin.');
     }
 
@@ -196,7 +197,7 @@ const Checkout = () => {
       let response;
 
       if (isLoggedIn) {
-        // ĐÃ LOGIN → DÙNG API CŨ
+        // === ĐÃ ĐĂNG NHẬP: DÙNG API CŨ ===
         const checkoutData = {
           fullName: fullName.trim(),
           phoneNumber: phoneNumber.trim(),
@@ -213,26 +214,30 @@ const Checkout = () => {
           { headers: { Authorization: `Bearer ${t}` } }
         ));
       } else {
-        // CHƯA LOGIN → DÙNG /Checkout/Buy-now
-        const buyNowData = {
+        // === CHƯA ĐĂNG NHẬP: DÙNG API MỚI ===
+        const paymentData = {
           fullName: fullName.trim(),
           phoneNumber: phoneNumber.trim(),
           address: address.trim(),
-          productId: cartItems[0].productId, // Chỉ hỗ trợ 1 sản phẩm từ "Mua ngay"
-          quantity: cartItems[0].quantity,
+          products: cartItems.map(i => ({
+            productId: i.productId,
+            quantity: i.quantity
+          })),
           voucherCode: voucherCode.trim() || null,
-          usePoint: false,
+          usePoint: false, // Khách không dùng điểm
           method: paymentMethod.toUpperCase() // COD hoặc VNPAY
         };
 
-        response = await API.post('/Checkout/Buy-now', buyNowData);
+        response = await API.post('/Checkout/Payment-without-login', paymentData);
       }
 
+      // === XỬ LÝ KẾT QUẢ ===
       if (response.data.paymentUrl) {
         window.location.href = response.data.paymentUrl;
         return;
       }
 
+      // XÓA GIỎ HÀNG KHÁCH
       if (!isLoggedIn) {
         localStorage.removeItem(GUEST_CART_KEY);
         window.dispatchEvent(new Event('cartUpdate'));
@@ -241,7 +246,7 @@ const Checkout = () => {
       setSuccess(true);
       setTimeout(() => navigate('/order-success'), 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Thanh toán thất bại.');
+      setError(err.response?.data?.message || 'Thanh toán thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -283,7 +288,11 @@ const Checkout = () => {
                   <TableRow key={item.productId}>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <img src={item.mainImage || '/placeholder-product.jpg'} alt={item.productName} style={{ width: 50, height: 50, objectFit: 'cover' }} />
+                        <img
+                          src={item.mainImage || '/placeholder-product.jpg'}
+                          alt={item.productName}
+                          style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }}
+                        />
                         <Typography>{item.productName}</Typography>
                       </Box>
                     </TableCell>
@@ -296,15 +305,33 @@ const Checkout = () => {
             </Table>
           </TableContainer>
 
+          {/* ƯU ĐÃI (CHỈ NGƯỜI ĐĂNG NHẬP) */}
           {isLoggedIn && (
             <Box sx={{ mb: 4 }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Ưu đãi</Typography>
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <TextField label="Mã voucher" value={voucherCode} onChange={e => setVoucherCode(e.target.value)} sx={{ flex: 1 }} disabled={loading} />
-                <Button variant="contained" onClick={applyVoucher} disabled={loading}>Áp dụng</Button>
+                <TextField
+                  label="Mã voucher"
+                  value={voucherCode}
+                  onChange={e => setVoucherCode(e.target.value)}
+                  sx={{ flex: 1 }}
+                  disabled={loading}
+                />
+                <Button variant="contained" onClick={applyVoucher} disabled={loading}>
+                  Áp dụng
+                </Button>
               </Box>
               <FormControlLabel
-                control={<Checkbox checked={usePoints} onChange={e => { setUsePoints(e.target.checked); calculateTotal(cartItems); }} disabled={userPoints === 0 || loading} />}
+                control={
+                  <Checkbox
+                    checked={usePoints}
+                    onChange={e => {
+                      setUsePoints(e.target.checked);
+                      calculateTotal(cartItems);
+                    }}
+                    disabled={userPoints === 0 || loading}
+                  />
+                }
                 label={`Dùng ${userPoints} điểm (giảm ${(userPoints * 10000).toLocaleString('vi-VN')}₫)`}
               />
             </Box>
@@ -360,7 +387,9 @@ const Checkout = () => {
             <Typography>Giá gốc: {totalPrice.toLocaleString('vi-VN')}₫</Typography>
             {voucherDiscount > 0 && <Typography color="success.main">- Voucher: -{voucherDiscount.toLocaleString('vi-VN')}₫</Typography>}
             {usePoints && usedPoints > 0 && <Typography color="success.main">- Điểm ({usedPoints}): -{(usedPoints * 10000).toLocaleString('vi-VN')}₫</Typography>}
-            <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold', mt: 1 }}>Tổng: {finalPrice.toLocaleString('vi-VN')}₫</Typography>
+            <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold', mt: 1 }}>
+              Tổng: {finalPrice.toLocaleString('vi-VN')}₫
+            </Typography>
           </Box>
 
           <Button

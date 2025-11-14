@@ -112,7 +112,13 @@
   color: white;
 }
 
-.logoutButton, .loginButton, .cartButton {
+.loginButton, .cartButton {
+  height: 40px;
+}
+
+.logoutButton {
+  background-color: #ff1744;
+  color: white;
   height: 40px;
 }
 
