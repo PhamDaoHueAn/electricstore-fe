@@ -40,9 +40,9 @@ const CustomerList = () => {
         } else {
           apiUrl = `/Customers?pageNumber=${page}&pageSize=${pageSize}`;
         }
-        
+
         const res = await API.get(apiUrl);
-        
+
         if (searchPhone.trim()) {
           setCustomers(res.data || []);
           setTotalPages(1);

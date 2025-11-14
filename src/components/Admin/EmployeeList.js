@@ -56,9 +56,9 @@ const EmployeeList = () => {
         } else {
           apiUrl = `/Employee?pageNumber=${page}&pageSize=${pageSize}`;
         }
-        
+
         const res = await API.get(apiUrl);
-        
+
         if (searchPhone.trim()) {
           setEmployees(res.data || []);
           setTotalPages(1);
