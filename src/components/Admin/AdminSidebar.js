@@ -9,13 +9,19 @@ import {
   Receipt,
   Category,
   BrandingWatermark,
-  RateReview
+  RateReview,
+  LocalOffer,
+  Wallpaper,
+  FlashOn,
+  Business,
+  QuestionAnswer,
+  AccountCircle
 } from '@mui/icons-material';
 const AdminSidebar = ({ open = true }) => {
   const location = useLocation();
 
   const menuItems = [
-    { text: 'Dashboard', path: '/admin/dashboard', icon: <Dashboard />, color: '#ffffffff' },
+    { text: 'Thông tin cá nhân', path: '/admin/profile', icon: <AccountCircle />, color: '#ffffffff' },
     { text: 'Quản lý Sản phẩm', path: '/admin/products', icon: <Inventory />, color: '#ffffffff' },
     { text: 'Quản lý Khách hàng', path: '/admin/customers', icon: <People />, color: '#ffffffff' },
     { text: 'Quản lý Nhân viên', path: '/admin/employees', icon: <Group />, color: '#ffffffff' },
@@ -23,6 +29,11 @@ const AdminSidebar = ({ open = true }) => {
     { text: 'Quản lý Danh mục', path: '/admin/categories', icon: <Category />, color: '#ffffffff' },
     { text: 'Quản lý Thương hiệu', path: '/admin/brands', icon: <BrandingWatermark />, color: '#ffffffff' },
     { text: 'Quản lý Đánh giá', path: '/admin/reviews', icon: <RateReview />, color: '#ffffffff' },
+    { text: 'Quản lý Voucher', path: '/admin/vouchers', icon: <LocalOffer />, color: '#ffffffff' },
+    { text: 'Quản lý Banner', path: '/admin/banners', icon: <Wallpaper />, color: '#ffffffff' },
+    { text: 'Quản lý Flash Sale', path: '/admin/flashsale', icon: <FlashOn />, color: '#ffffffff' },
+    { text: 'Quản lý Nhà cung cấp', path: '/admin/suppliers', icon: <Business />, color: '#ffffffff' },
+    { text: 'Quản lý Hỏi & Đáp', path: '/admin/qna', icon: <QuestionAnswer />, color: '#ffffffff' },
 
 
   ];
@@ -42,7 +53,9 @@ const AdminSidebar = ({ open = true }) => {
         borderColor: 'divider',
         transition: 'width 0.3s ease',
         overflow: 'hidden',
-        boxShadow: '2px 0 10px rgba(0,0,0,0.1)'
+        boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
       {/* Header */}
@@ -57,7 +70,7 @@ const AdminSidebar = ({ open = true }) => {
         </Box>
       )}
 
-      <List sx={{ pt: open ? 2 : 6 }}>
+      <List sx={{ pt: open ? 2 : 6, overflow: 'auto', flexGrow: 1, '&::-webkit-scrollbar': { width: '6px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '3px' } }}>
         {menuItems.map((item, index) => {
           const active = isActive(item.path);
           return (

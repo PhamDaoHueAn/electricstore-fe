@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import API from '../../services/api';
+import API from '../../../services/api';
 import {
   Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, IconButton, CircularProgress, Tooltip, Avatar, Pagination, Stack,
@@ -9,7 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
-import BrandForm from './BrandForm';
+import CategoryForm from './CategoryForm';
 
 // Component để xử lý loading ảnh
 const ImageAvatar = ({ src, alt, name, sx }) => {
@@ -35,63 +35,48 @@ const ImageAvatar = ({ src, alt, name, sx }) => {
           <CircularProgress size={16} />
         </Box>
       )}
-
-      {!error && src ? (
-        <Box
-          component="img"
-          src={src}
-          alt={alt}
-          sx={{
-            ...sx,
-            borderRadius: 1,
-            objectFit: 'contain', // Giữ tỷ lệ ảnh, không bị cắt
-            bgcolor: '#f5f5f5', // Background nhạt để ảnh nổi bật
-            border: '1px solid #e0e0e0',
-            padding: 0.5 // Padding nhỏ để ảnh không sát viền
-          }}
-          onLoad={() => setLoading(false)}
-          onError={() => {
-            setLoading(false);
-            setError(true);
-          }}
-        />
-      ) : (
-        <Avatar
-          variant="rounded"
-          sx={sx}
-        >
-          {name ? name.charAt(0).toUpperCase() : 'B'}
-        </Avatar>
-      )}
+      <Avatar
+        variant="rounded"
+        src={error ? undefined : src}
+        alt={alt}
+        sx={sx}
+        onLoad={() => setLoading(false)}
+        onError={() => {
+          setLoading(false);
+          setError(true);
+        }}
+      >
+        {name ? name.charAt(0).toUpperCase() : 'C'}
+      </Avatar>
     </Box>
   );
 };
 
-const BrandList = () => {
-  const [allBrands, setAllBrands] = useState([]);
-  const [brands, setBrands] = useState([]);
+const CategoryList = () => {
+  const [allCategories, setAllCategories] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openForm, setOpenForm] = useState(false);
-  const [editBrand, setEditBrand] = useState(null);
+  const [editCategory, setEditCategory] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // useEffect riêng để filter và paginate khi allBrands hoặc search/page thay đổi
+  // useEffect riêng để filter và paginate khi allCategories hoặc search/page thay đổi
   useEffect(() => {
     let list = [];
 
     // Filter based on search term
     if (searchTerm.trim()) {
       const searchLower = searchTerm.trim().toLowerCase();
-      list = allBrands.filter(brand => {
-        const name = brand?.brandName || brand?.BrandName || '';
+      list = allCategories.filter(category => {
+        const name = category?.categoryName || category?.CategoryName || '';
         return name.toLowerCase().includes(searchLower);
       });
     } else {
-      list = allBrands;
+      list = allCategories;
     }
 
     // Frontend pagination
@@ -99,7 +84,7 @@ const BrandList = () => {
     const endIndex = startIndex + pageSize;
     const paginatedList = list.slice(startIndex, endIndex);
 
-    setBrands(paginatedList);
+    setCategories(paginatedList);
     const newTotalPages = Math.ceil(list.length / pageSize);
     setTotalPages(newTotalPages);
 
@@ -107,16 +92,16 @@ const BrandList = () => {
     if (page > newTotalPages && newTotalPages > 0) {
       setPage(newTotalPages);
     }
-  }, [allBrands, searchTerm, page, pageSize]);
+  }, [allCategories, searchTerm, page, pageSize]);
 
   useEffect(() => {
-    console.log('BrandList useEffect triggered');
-    const fetchBrands = async () => {
-      console.log('Starting fetchBrands...');
+    console.log('CategoryList useEffect triggered');
+    const fetchCategories = async () => {
+      console.log('Starting fetchCategories...');
       setLoading(true);
       try {
-        // Lấy tất cả brands
-        const apiUrl = `/Brands`;
+        // Lấy tất cả categories
+        const apiUrl = `/Categories`;
         console.log('Get all API URL:', apiUrl);
         console.log('Making API call...');
 
@@ -126,11 +111,11 @@ const BrandList = () => {
         console.log('Response status:', res.status);
 
         const allList = Array.isArray(res.data) ? res.data : [];
-        console.log('All brands:', allList);
-        setAllBrands(allList);
+        console.log('All categories:', allList);
+        setAllCategories(allList);
 
       } catch (err) {
-        console.error('Failed to load brands:', err);
+        console.error('Failed to load categories:', err);
         console.error('Error response:', err.response);
         console.error('Error message:', err.message);
         console.error('Error status:', err.response?.status);
@@ -140,17 +125,15 @@ const BrandList = () => {
 
       } finally {
         setLoading(false);
-        console.log('Finished fetchBrands');
+        console.log('Finished fetchCategories');
       }
     };
 
-    fetchBrands();
-  }, [refreshKey]);
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Bạn có chắc muốn xóa thương hiệu này?')) return;
+    fetchCategories();
+  }, [refreshKey]); const handleDelete = async (id) => {
+    if (!window.confirm('Bạn có chắc muốn xóa danh mục này?')) return;
     try {
-      await API.delete(`/Brands/${id}`);
+      await API.delete(`/Categories/${id}`);
       setRefreshKey(k => k + 1);
     } catch (err) {
       console.error('Delete failed', err);
@@ -158,9 +141,9 @@ const BrandList = () => {
     }
   };
 
-  const handleEdit = (brand) => {
-    console.log('Edit brand clicked:', brand);
-    setEditBrand(brand);
+  const handleEdit = (category) => {
+    console.log('Edit category clicked:', category);
+    setEditCategory(category);
     setOpenForm(true);
   };
 
@@ -182,7 +165,7 @@ const BrandList = () => {
       {/* Search và Add Button */}
       <Box sx={{ mb: 2, display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center' }}>
         <TextField
-          placeholder="Tìm kiếm thương hiệu theo tên..."
+          placeholder="Tìm kiếm danh mục theo tên..."
           value={searchTerm}
           onChange={handleSearchChange}
           variant="outlined"
@@ -197,7 +180,7 @@ const BrandList = () => {
           }}
         />
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenForm(true)}>
-          Thêm thương hiệu
+          Thêm danh mục
         </Button>
       </Box>
 
@@ -225,20 +208,20 @@ const BrandList = () => {
                 <TableRow>
                   <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Ảnh</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Tên thương hiệu</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Tên danh mục</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Trạng thái</TableCell>
                   <TableCell align="center" sx={{ fontWeight: 'bold' }}>Hành động</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {Array.isArray(brands) && brands.map(b => {
-                  // Debug log cho từng brand
-                  console.log('Brand item:', b);
+                {Array.isArray(categories) && categories.map(c => {
+                  // Debug log cho từng category
+                  console.log('Category item:', c);
 
-                  const id = b?.brandId || b?.BrandId;
-                  const name = b?.brandName || b?.BrandName || '';
-                  const isActive = b?.isActive !== undefined ? b.isActive : (b?.IsActive !== undefined ? b.IsActive : true);
-                  let image = b?.imageUrl || b?.ImageUrl;
+                  const id = c?.categoryId || c?.CategoryId;
+                  const name = c?.categoryName || c?.CategoryName || '';
+                  const isActive = c?.isActive !== undefined ? c.isActive : (c?.IsActive !== undefined ? c.IsActive : true);
+                  let image = c?.imageUrl || c?.ImageUrl;
 
                   // Thêm timestamp để force reload ảnh sau khi update
                   if (image && refreshKey > 0) {
@@ -254,12 +237,12 @@ const BrandList = () => {
                       <TableCell>
                         <ImageAvatar
                           src={image}
-                          alt={name || 'Brand'}
+                          alt={name || 'Category'}
                           name={name}
-                          sx={{ width: 120 }}
+                          sx={{ width: 80 }}
                         />
                       </TableCell>
-                      <TableCell>{name}</TableCell>
+                      <TableCell >{name}</TableCell>
                       <TableCell>
                         <Chip
                           label={isActive ? 'Hoạt động' : 'Không hoạt động'}
@@ -270,7 +253,7 @@ const BrandList = () => {
                       <TableCell align="center">
                         <Stack direction="row" spacing={1} justifyContent="center">
                           <Tooltip title="Chỉnh sửa">
-                            <IconButton color="info" onClick={() => handleEdit(b)}>
+                            <IconButton color="info" onClick={() => handleEdit(c)}>
                               <EditIcon />
                             </IconButton>
                           </Tooltip>
@@ -284,11 +267,11 @@ const BrandList = () => {
                     </TableRow>
                   );
                 })}
-                {brands.length === 0 && (
+                {categories.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                       <Typography variant="body1" color="text.secondary">
-                        {searchTerm ? 'Không tìm thấy thương hiệu nào' : 'Chưa có thương hiệu nào'}
+                        {searchTerm ? 'Không tìm thấy danh mục nào' : 'Chưa có danh mục nào'}
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -308,16 +291,16 @@ const BrandList = () => {
         </>
       )}
 
-      <BrandForm
+      <CategoryForm
         open={openForm}
-        initialData={editBrand}
+        initialData={editCategory}
         onClose={() => {
           setOpenForm(false);
-          setEditBrand(null);
+          setEditCategory(null);
         }}
         onSaved={() => {
           setOpenForm(false);
-          setEditBrand(null);
+          setEditCategory(null);
           setRefreshKey(k => k + 1);
         }}
       />
@@ -325,4 +308,4 @@ const BrandList = () => {
   );
 };
 
-export default BrandList;
+export default CategoryList;

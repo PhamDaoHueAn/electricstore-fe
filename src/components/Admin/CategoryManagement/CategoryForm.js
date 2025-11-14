@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
-  Grid, Box, Typography, FormControlLabel, Checkbox, IconButton
+  Grid, Box, Typography, FormControlLabel, Checkbox, IconButton, Avatar
 } from '@mui/material';
-import API from '../../services/api';
+import API from '../../../services/api';
 
-const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
+const CategoryForm = ({ open, onClose, onSaved, initialData = null }) => {
   const [form, setForm] = useState({
-    brandName: '',
+    categoryName: '',
     isActive: true,
-    brandImage: null,
+    categoryImage: null,
   });
   const [preview, setPreview] = useState(null);
 
@@ -41,7 +41,7 @@ const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
       setForm(f => ({
         ...f,
         // Hỗ trợ cả camelCase và PascalCase
-        brandName: initialData.brandName || initialData.BrandName || '',
+        categoryName: initialData.categoryName || initialData.CategoryName || '',
         isActive: initialData.isActive !== undefined ? initialData.isActive : (initialData.IsActive !== undefined ? initialData.IsActive : true),
       }));
 
@@ -50,11 +50,11 @@ const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
       setPreview(imageUrl || null);
       console.log('Set preview to:', imageUrl);
     } else {
-      // Reset form for new brand
+      // Reset form for new category
       setForm({
-        brandName: '',
+        categoryName: '',
         isActive: true,
-        brandImage: null,
+        categoryImage: null,
       });
       setPreview(null);
     }
@@ -65,9 +65,9 @@ const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
     if (!open) {
       setPreview(null);
       setForm({
-        brandName: '',
+        categoryName: '',
         isActive: true,
-        brandImage: null,
+        categoryImage: null,
       });
     }
   }, [open]);
@@ -85,47 +85,47 @@ const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
 
   const handleSubmit = async () => {
     try {
-      if (!form.brandName.trim()) {
-        alert('Vui lòng nhập tên thương hiệu');
+      if (!form.categoryName.trim()) {
+        alert('Vui lòng nhập tên danh mục');
         return;
       }
 
-      // Validate image cho new brand
-      const brandId = initialData?.brandId || initialData?.BrandId;
-      const isNewBrand = !brandId;
-      if (isNewBrand && !form.brandImage) {
-        alert('Vui lòng chọn ảnh thương hiệu');
+      // Validate image cho new category
+      const categoryId = initialData?.categoryId || initialData?.CategoryId;
+      const isNewCategory = !categoryId;
+      if (isNewCategory && !form.categoryImage) {
+        alert('Vui lòng chọn ảnh danh mục');
         return;
       }
 
       const data = new FormData();
-      data.append('BrandName', form.brandName);
+      data.append('CategoryName', form.categoryName);
       data.append('IsActive', String(!!form.isActive));
 
-      if (form.brandImage) {
-        data.append('BrandImage', form.brandImage);
+      if (form.categoryImage) {
+        data.append('CategoryImage', form.categoryImage);
       }
 
-      if (brandId) {
+      if (categoryId) {
         // PUT để update
-        console.log('Updating brand with ID:', brandId);
-        await API.put(`/Brands/${brandId}`, data, {
+        console.log('Updating category with ID:', categoryId);
+        await API.put(`/Categories/${categoryId}`, data, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
-        alert('Cập nhật thương hiệu thành công!');
+        alert('Cập nhật danh mục thành công!');
       } else {
         // POST để tạo mới
-        await API.post('/Brands', data, {
+        await API.post('/Categories', data, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
-        alert('Tạo thương hiệu thành công!');
+        alert('Tạo danh mục thành công!');
       }
 
       // Reset form và đóng dialog
       setForm({
-        brandName: '',
+        categoryName: '',
         isActive: true,
-        brandImage: null,
+        categoryImage: null,
       });
       setPreview(null);
 
@@ -138,7 +138,7 @@ const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
       // Đóng dialog sau khi đã refresh
       setTimeout(() => {
         onClose();
-      }, 100);
+      }, 50);
     } catch (err) {
       console.error('Save failed', err);
       alert(err.response?.data || 'Lưu thất bại');
@@ -148,7 +148,7 @@ const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>
-        {initialData ? 'Chỉnh sửa thương hiệu' : 'Thêm thương hiệu'}
+        {initialData ? 'Chỉnh sửa danh mục' : 'Thêm danh mục'}
       </DialogTitle>
       <DialogContent sx={{ padding: '24px !important' }}>
         <Grid container spacing={3} sx={{ mt: 1 }}>
@@ -156,9 +156,9 @@ const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
           <Grid item xs={8}>
             <TextField
               fullWidth
-              label="Tên thương hiệu"
-              name="brandName"
-              value={form.brandName}
+              label="Tên danh mục"
+              name="categoryName"
+              value={form.categoryName}
               onChange={handleChange}
               required
               sx={{ mb: 3 }}
@@ -179,12 +179,12 @@ const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
           {/* Cột phải: Ảnh */}
           <Grid item xs={4}>
             <Typography variant="subtitle2" sx={{ mb: 2 }}>
-              Ảnh thương hiệu {!initialData && <span style={{ color: 'red' }}>*</span>}
+              Ảnh danh mục {!initialData && <span style={{ color: 'red' }}>*</span>}
             </Typography>
 
             <input
               type="file"
-              name="brandImage"
+              name="categoryImage"
               accept="image/*"
               onChange={handleChange}
               required={!initialData}
@@ -204,26 +204,24 @@ const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
                   Ảnh hiện tại:
                 </Typography>
                 <Box sx={{ position: 'relative', display: 'inline-block' }}>
-                  <Box
-                    component="img"
+                  <Avatar
+                    variant="rounded"
                     src={preview}
-                    alt="brand preview"
+                    alt="category preview"
                     sx={{
                       width: 120,
                       height: 120,
-                      borderRadius: 2,
-                      objectFit: 'contain',
-                      bgcolor: '#f5f5f5',
                       border: '2px solid',
                       borderColor: 'primary.main',
-                      boxShadow: 1,
-                      padding: 1
+                      boxShadow: 1
                     }}
-                  />
+                  >
+                    {form.categoryName.charAt(0)}
+                  </Avatar>
                   <IconButton
                     size="small"
                     onClick={() => {
-                      setForm(f => ({ ...f, brandImage: null }));
+                      setForm(f => ({ ...f, categoryImage: null }));
                       setPreview(null);
                     }}
                     sx={{
@@ -275,4 +273,4 @@ const BrandForm = ({ open, onClose, onSaved, initialData = null }) => {
   );
 };
 
-export default BrandForm;
+export default CategoryForm;

@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
-import { 
-  TextField, 
-  Button, 
-  Container, 
-  Typography, 
-  Link, 
-  Paper, 
-  Avatar, 
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
+  Link,
+  Paper,
+  Avatar,
   Box,
   CssBaseline
 } from '@mui/material';
@@ -14,7 +14,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
-import { login, isAdmin, isAuthenticated } from '../../services/auth';
+import { login, isAdminOrEmployee, isAuthenticated } from '../../services/auth';
 
 const validationSchema = Yup.object({
   username: Yup.string().required('Tên đăng nhập là bắt buộc'),
@@ -67,8 +67,8 @@ const Login = () => {
             onSubmit={async (values, { setSubmitting, setErrors }) => {
               try {
                 await login(values);
-                if (isAdmin()) {
-                  navigate('/admin/dashboard');
+                if (isAdminOrEmployee()) {
+                  navigate('/admin/profile');
                 } else {
                   navigate('/');
                 }

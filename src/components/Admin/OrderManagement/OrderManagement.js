@@ -1,5 +1,5 @@
 import React from 'react';
-import AdminLayout from './AdminLayout';
+import AdminLayout from '../AdminLayout';
 import OrderList from './OrderList';
 import { Typography } from '@mui/material';
 

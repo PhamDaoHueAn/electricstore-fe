@@ -1,5 +1,5 @@
 import React from 'react';
-import AdminLayout from './AdminLayout';
+import AdminLayout from '../AdminLayout';
 import EmployeeList from './EmployeeList';
 
 const EmployeeManagement = () => {

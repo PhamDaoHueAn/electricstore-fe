@@ -1,9 +1,9 @@
 import React from 'react';
-import AdminLayout from './AdminLayout';
-import BrandList from './BrandList';
+import AdminLayout from '../AdminLayout';
+import CategoryList from './CategoryList';
 import { Typography } from '@mui/material';
 
-const BrandManagement = () => {
+const CategoryManagement = () => {
   return (
     <AdminLayout>
       <Typography
@@ -15,11 +15,11 @@ const BrandManagement = () => {
           mb: 3
         }}
       >
-        Quản lý Thương hiệu
+        Quản lý Danh mục
       </Typography>
-      <BrandList />
+      <CategoryList />
     </AdminLayout>
   );
 };
 
-export default BrandManagement;
+export default CategoryManagement;

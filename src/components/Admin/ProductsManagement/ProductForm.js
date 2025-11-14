@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, Box, Typography, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, IconButton } from '@mui/material';
-import API from '../../services/api';
+import API from '../../../services/api';
 
 const ProductForm = ({ open, onClose, onSaved, initialData = null }) => {
   const [form, setForm] = useState({

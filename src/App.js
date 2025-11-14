@@ -4,14 +4,19 @@ import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import ForgotPassword from './components/Auth/ForgotPassword';
 import ChangePassword from './components/Auth/ChangePassword';
-import Dashboard from './components/Admin/Dashboard';
-import ProductsManagement from './components/Admin/ProductsManagement';
-import CategoryManagement from './components/Admin/CategoryManagement';
-import BrandManagement from './components/Admin/BrandManagement';
-import OrderManagement from './components/Admin/OrderManagement';
-import ReviewManagement from './components/Admin/ReviewManagement';
-import CustomerManagement from './components/Admin/CustomerManagement';
-import EmployeeManagement from './components/Admin/EmployeeManagement';
+import EmployeeProfile from './components/Admin/EmployeeProfile';
+import ProductsManagement from './components/Admin/ProductsManagement/ProductsManagement';
+import CategoryManagement from './components/Admin/CategoryManagement/CategoryManagement';
+import BrandManagement from './components/Admin/BrandManagement/BrandManagement';
+import OrderManagement from './components/Admin/OrderManagement/OrderManagement';
+import ReviewManagement from './components/Admin/ReviewManagement/ReviewManagement';
+import VoucherManagement from './components/Admin/VoucherManagement/VoucherManagement';
+import BannerManagement from './components/Admin/BannerManagement/BannerManagement';
+import FlashSaleManagement from './components/Admin/FlashSaleManagement/FlashSaleManagement';
+import CustomerManagement from './components/Admin/CustomerManagement/CustomerManagement';
+import EmployeeManagement from './components/Admin/EmployeeManagement/EmployeeManagement';
+import SupplierManagement from './components/Admin/SupplierMannagement/SupplierMannagement';
+import QuestionAndAnswerManagement from './components/Admin/QuestionAndAnswerManagement/QuestionAndAnswerManagement';
 
 import Home from './components/Customer/Home';
 import { isAuthenticated, isAdmin, isAdminOrEmployee } from './services/auth';
@@ -73,10 +78,10 @@ function App() {
 
           {/* ADMIN & EMPLOYEE ROUTES */}
           <Route
-            path="/admin/dashboard"
+            path="/admin/profile"
             element={
               <ProtectedRoute adminOrEmployee>
-                <Dashboard />
+                <EmployeeProfile />
               </ProtectedRoute>
             }
           />
@@ -117,6 +122,54 @@ function App() {
             element={
               <ProtectedRoute adminOrEmployee>
                 <ReviewManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/vouchers"
+            element={
+              <ProtectedRoute adminOrEmployee>
+                <VoucherManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/flashsale"
+            element={
+              <ProtectedRoute adminOrEmployee>
+                <FlashSaleManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/banners"
+            element={
+              <ProtectedRoute adminOrEmployee>
+                <BannerManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/flashsales"
+            element={
+              <ProtectedRoute adminOrEmployee>
+                <FlashSaleManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/suppliers"
+            element={
+              <ProtectedRoute adminOrEmployee>
+                <SupplierManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/qna"
+            element={
+              <ProtectedRoute adminOrEmployee>
+                <QuestionAndAnswerManagement />
               </ProtectedRoute>
             }
           />
