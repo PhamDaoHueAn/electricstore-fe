@@ -408,28 +408,58 @@ const ProductDetail = () => {
             </Button>
 
             {/* THÔNG SỐ KỸ THUẬT */}
-            <Box sx={{ mt: 4 }}>
-              <Typography variant="h6" gutterBottom>Thông số kỹ thuật</Typography>
-              <Box component="ul" sx={{ pl: 2, m: 0, '& li': { mb: 1 } }}>
-                {descriptionPoints.length > 0 ? (
-                  descriptionPoints.map((point, i) => (
-                    <Typography component="li" key={i} variant="body2" color="text.secondary">
-                      {point}
-                    </Typography>
-                  ))
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    Không có thông tin mô tả.
-                  </Typography>
-                )}
-              </Box>
-            </Box>
+            <Box sx={{ mt: 5 }}>
+              <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
+                Thông số kỹ thuật
+              </Typography>
+              <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                <Box sx={{ maxHeight: 560, overflow: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <tbody>
+                      {descriptionPoints.length > 0 ? (
+                        descriptionPoints.map((point, index) => {
+                          // Tách key : value
+                          const hasColon = point.includes(':');
+                          const label = hasColon ? point.split(':')[0].trim() : point;
+                          const value = hasColon ? point.split(':').slice(1).join(':').trim() : '';
 
-            <Box sx={{ mt: 3, fontSize: '0.9rem', color: 'text.secondary' }}>
-              <Typography><strong>Thương hiệu:</strong> {brandName}</Typography>
-              <Typography><strong>Danh mục:</strong> {categoryName}</Typography>
-              <Typography><strong>Năm sản xuất:</strong> {manufactureYear}</Typography>
-              <Typography><strong>Tồn kho:</strong> {stockQuantity.toLocaleString('vi-VN')}</Typography>
+                          return (
+                            <tr key={index} style={{ 
+                              backgroundColor: index % 2 === 0 ? '#fdfdfd' : '#ffffff',
+                              borderBottom: '1px solid #eee'
+                            }}>
+                              <td style={{ 
+                                padding: '14px 16px', 
+                                fontWeight: 'bold', 
+                                color: '#333',
+                                width: '45%',
+                                verticalAlign: 'top',
+                                fontSize: '0.95rem'
+                              }}>
+                                {label}
+                              </td>
+                              <td style={{ 
+                                padding: '14px 16px', 
+                                color: '#555',
+                                verticalAlign: 'top',
+                                fontSize: '0.95rem'
+                              }}>
+                                {value || '-'}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={2} style={{ padding: '30px', textAlign: 'center', color: '#999' }}>
+                            Không có thông tin mô tả.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </Box>
+              </Paper>
             </Box>
           </Grid>
         </Grid>
