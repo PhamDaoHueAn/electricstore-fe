@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Button, IconButton, TextField, Autocomplete, CircularProgress, Menu, MenuItem } from '@mui/material';
+import { 
+  AppBar, Toolbar, Typography, Button, IconButton, TextField, 
+  Autocomplete, CircularProgress, Menu, MenuItem, Avatar   // ← THÊM Avatar
+} from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import API from '../services/api';
 import styles from './Header.module.css';
@@ -17,6 +19,7 @@ const Header = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [cartCount, setCartCount] = useState(0);
   const [username, setUsername] = useState('');
+  const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg'); // ← THÊM STATE CHO AVATAR
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   // === DROPDOWN DANH MỤC ===
@@ -39,21 +42,14 @@ const Header = () => {
     }
   };
 
-  // === MỞ/CLOSED DROPDOWN ===
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
   const handleCategoryClick = (categoryId) => {
     handleMenuClose();
     navigate(`/category/${categoryId}`);
   };
 
-  // === LẤY GIỎ HÀNG KHÁCH ===
+  // === GIỎ HÀNG KHÁCH VÃNG LAI ===
   const getGuestCartCount = () => {
     try {
       const saved = localStorage.getItem(GUEST_CART_KEY);
@@ -65,16 +61,15 @@ const Header = () => {
     }
   };
 
-  // === LẤY THÔNG TIN NGƯỜI DÙNG ===
+  // === LẤY THÔNG TIN NGƯỜI DÙNG (có lấy avatar) ===
   const fetchUserProfile = async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) return;
 
     try {
-      const response = await API.get('/Auth/get-my-profile', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await API.get('/Auth/get-my-profile');
       setUsername(response.data.fullName || 'User');
+      setUserAvatar(response.data.imageUrl || '/images/default-avatar.jpg'); // ← LẤY AVATAR THẬT
     } catch (error) {
       console.error('Lỗi lấy profile:', error);
       if (error.response?.status === 401) {
@@ -82,21 +77,19 @@ const Header = () => {
         localStorage.removeItem('refreshToken');
         setIsLoggedIn(false);
         setUsername('');
+        setUserAvatar('/images/default-avatar.jpg');
         updateCartCount();
         window.dispatchEvent(new Event('authChange'));
       }
     }
   };
 
-  // === LẤY SỐ LƯỢNG GIỎ HÀNG ===
+  // === LẤY GIỎ HÀNG ===
   const fetchCartCount = async () => {
     const token = localStorage.getItem('accessToken');
-
     if (isLoggedIn && token) {
       try {
-        const response = await API.get('/Cart', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await API.get('/Cart');
         const total = Array.isArray(response.data)
           ? response.data.reduce((sum, item) => sum + (item.quantity || 0), 0)
           : 0;
@@ -108,6 +101,7 @@ const Header = () => {
           localStorage.removeItem('refreshToken');
           setIsLoggedIn(false);
           setUsername('');
+          setUserAvatar('/images/default-avatar.jpg');
           updateCartCount();
           window.dispatchEvent(new Event('authChange'));
         } else {
@@ -119,12 +113,9 @@ const Header = () => {
     }
   };
 
-  // === CẬP NHẬT GIỎ ===
-  const updateCartCount = () => {
-    fetchCartCount();
-  };
+  const updateCartCount = () => fetchCartCount();
 
-  // === THEO DÕI SỰ KIỆN ===
+  // === THEO DÕI ĐĂNG NHẬP ===
   useEffect(() => {
     const handleAuthChange = () => {
       const loggedIn = !!localStorage.getItem('accessToken');
@@ -134,16 +125,15 @@ const Header = () => {
         fetchCartCount();
       } else {
         setUsername('');
+        setUserAvatar('/images/default-avatar.jpg');
         updateCartCount();
       }
     };
 
-    const handleCartUpdate = () => {
-      updateCartCount();
-    };
+    const handleCartUpdate = () => updateCartCount();
 
     handleAuthChange();
-    fetchCategories(); // LẤY DANH MỤC KHI MỞ TRANG
+    fetchCategories();
 
     window.addEventListener('authChange', handleAuthChange);
     window.addEventListener('cartUpdate', handleCartUpdate);
@@ -154,7 +144,7 @@ const Header = () => {
     };
   }, [location.pathname]);
 
-  // === TÌM KIẾM GỢI Ý ===
+  // === TÌM KIẾM ===
   const fetchSuggestions = async (query) => {
     if (!query.trim()) {
       setSuggestions([]);
@@ -194,6 +184,7 @@ const Header = () => {
     localStorage.removeItem('refreshToken');
     setIsLoggedIn(false);
     setUsername('');
+    setUserAvatar('/images/default-avatar.jpg');
     setCartCount(getGuestCartCount());
     window.dispatchEvent(new Event('authChange'));
     window.dispatchEvent(new Event('cartUpdate'));
@@ -209,16 +200,12 @@ const Header = () => {
             variant="h5"
             component="a"
             href="/"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('/');
-            }}
+            onClick={(e) => { e.preventDefault(); navigate('/'); }}
             className={styles.logo}
           >
             Điện Máy Xanh
           </Typography>
 
-          {/* Dropdown Danh mục */}
           <Button
             color="inherit"
             onClick={handleMenuOpen}
@@ -234,18 +221,11 @@ const Header = () => {
             open={Boolean(anchorEl)}
             onClose={handleMenuClose}
             PaperProps={{
-              sx: {
-                mt: 1,
-                minWidth: 200,
-                maxHeight: 400,
-                overflow: 'auto'
-              }
+              sx: { mt: 1, minWidth: 200, maxHeight: 400, overflow: 'auto' }
             }}
           >
             {loadingCategories ? (
-              <MenuItem disabled>
-                <CircularProgress size={20} sx={{ mr: 1 }} /> Đang tải...
-              </MenuItem>
+              <MenuItem disabled><CircularProgress size={20} sx={{ mr: 1 }} /> Đang tải...</MenuItem>
             ) : categories.length === 0 ? (
               <MenuItem disabled>Không có danh mục</MenuItem>
             ) : (
@@ -310,13 +290,20 @@ const Header = () => {
         <div className={styles.userActions}>
           {isLoggedIn && location.pathname !== '/login' ? (
             <>
+              {/* ← CHỈ SỬA DUY NHẤT ĐOẠN NÀY → DÙNG AVATAR THẬT */}
               <IconButton
                 color="inherit"
                 onClick={() => navigate('/profile')}
                 className={styles.userIcon}
               >
-                <AccountCircleIcon />
+                <Avatar
+                  src={userAvatar}
+                  alt={username}
+                  sx={{ width: 36, height: 36 }}
+                />
               </IconButton>
+              {/* ← HẾT PHẦN SỬA */}
+
               <Typography
                 variant="body1"
                 className={styles.username}
@@ -326,7 +313,7 @@ const Header = () => {
                 {username}
               </Typography>
               <Button
-                variant="contained"               
+                variant="contained"
                 onClick={handleLogoutClick}
                 className={styles.logoutButton}
               >

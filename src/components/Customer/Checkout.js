@@ -116,7 +116,7 @@ const Checkout = () => {
 
           // TỰ ĐỘNG ĐIỀN THÔNG TIN
           setFullName(profile.fullName || '');
-          setPhoneNumber(profile.phoneNumber || '');
+          setPhoneNumber(profile.phone || '');
           setAddress(profile.address || '');
           setUserPoints(profile.point || 0);
         } catch (err) {

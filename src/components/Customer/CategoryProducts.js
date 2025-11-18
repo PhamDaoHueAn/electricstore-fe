@@ -171,7 +171,7 @@ const CategoryProducts = () => {
                 >
                   <div className={styles.itemLabel}>
                     {product.manufactureYear >= 2025 && <span className={styles.lnNew}>Mẫu mới</span>}
-                    <span className={styles.lbTragop}>Trả chậm 0% trả trước 0đ</span>
+                    
                   </div>
                   <div className={styles.itemImg}>
                     <img
@@ -182,17 +182,14 @@ const CategoryProducts = () => {
                       onError={(e) => { e.target.src = '/images/placeholder-product.jpg'; }}
                     />
                   </div>
-                  <p className={styles.resultLabel}>
-                    <img src="/images/promotion-icon.png" alt="Promotion" width="20" height="20" />
-                    <span>TRUNG THU GIẢM LỚN</span>
-                  </p>
+                  
                   <h3>
                     {product.productName}
-                    {product.manufactureYear >= 2025 && <span className={styles.newModel}>Mẫu mới</span>}
+                    
                   </h3>
                   <div className={styles.itemCompare}>
-                    {product.manufactureYear && <span>{product.manufactureYear}W</span>}
-                    <span>Có bơm trợ lực</span>
+                    {product.manufactureYear && <span>{product.manufactureYear}</span>}
+                    
                   </div>
                   <p className={styles.itemTxtOnline}>
                     <i></i>
@@ -211,9 +208,7 @@ const CategoryProducts = () => {
                       </span>
                     </div>
                   )}
-                  <p className={styles.itemGift}>
-                    Quà <b>70.000₫</b>
-                  </p>
+                  
                 </a>
                 
                 <div className={styles.ratingCompare}>
@@ -222,10 +217,7 @@ const CategoryProducts = () => {
                     <b>{(product.averageRating || 0).toFixed(1)}</b>
                   </div>
                   <span className={styles.stockCount}>• Tồn kho {product.stockQuantity.toLocaleString('vi-VN')}</span>
-                  <a href="javascript:;" className={styles.itemSs} onClick={(e) => e.stopPropagation()}>
-                    <i className="bi bi-arrow-left-right"></i>
-                    So sánh
-                  </a>
+                  
                 </div>
               </li>
             ))}
