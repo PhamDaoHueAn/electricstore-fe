@@ -17,6 +17,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import Slider from 'react-slick';
+import EditIcon from '@mui/icons-material/Edit';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
@@ -219,24 +220,22 @@ const ProductDetail = () => {
       formData.append('ProductId', productId);
       formData.append('Rating', reviewRating);
       formData.append('Content', reviewContent.trim());
-      formData.append('Name', reviewName.trim());
+      formData.append('FullName', reviewName.trim());
       formData.append('Phone', reviewPhone.replace(/\D/g, ''));
       formData.append('ParentID', 0);
 
       let response;
-      if (isLoggedIn) {
-        response = await API.post('/api/ProductReview/create', formData, {
-          headers: { 
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        });
-      } else {
-        response = await API.post('/api/ProductReview/guest', formData);
-      }
+      
+      response = await API.post('/ProductReview/create', formData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+      
 
       setReviews([...reviews, response.data]);
-      alert('Gửi đánh giá thành công!');
+      alert('Gửi đánh giá thành công! - Chờ phê duyệt từ quản trị viên.');
       handleCloseReviewModal();
     } catch (err) {
       setReviewError('Không thể gửi đánh giá. Vui lòng thử lại.');
@@ -309,7 +308,7 @@ const ProductDetail = () => {
 
         <Grid container spacing={4}>
           {/* HÌNH ẢNH */}
-          {/* HÌNH ẢNH – DÙNG LẠI PHIÊN BẢN CŨ (HOẠT ĐỘNG MƯỢT) */}
+          
 <Grid item xs={12} md={6}>
   <Paper elevation={2}>
     <Slider
@@ -332,7 +331,7 @@ const ProductDetail = () => {
       ))}
     </Slider>
 
-    {/* THUMBNAIL NGANG – DÙNG LẠI CŨ */}
+    {/* THUMBNAIL NGANG */}
     <Box className={styles.sliderImg}>
       {images.map((img, i) => (
         <Box
@@ -398,14 +397,7 @@ const ProductDetail = () => {
               </Button>
             </Box>
 
-            <Button
-              variant="outlined"
-              onClick={handleOpenReviewModal}
-              sx={{ mb: 3 }}
-              fullWidth
-            >
-              Viết đánh giá
-            </Button>
+            
 
             {/* THÔNG SỐ KỸ THUẬT */}
             <Box sx={{ mt: 5 }}>
@@ -464,30 +456,97 @@ const ProductDetail = () => {
           </Grid>
         </Grid>
 
-        {/* ĐÁNH GIÁ */}
-        <Box sx={{ mt: 6 }}>
-          <Typography variant="h5" gutterBottom>Đánh giá sản phẩm</Typography>
+        {/* ĐÁNH GIÁ SẢN PHẨM */}
+        <Box sx={{ mt: 8 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
+            Đánh giá sản phẩm
+          </Typography>
+
           {loadingReviews ? (
-            <Typography>Đang tải đánh giá...</Typography>
-          ) : reviews.length === 0 ? (
-            <Typography color="text.secondary">Chưa có đánh giá nào.</Typography>
-          ) : (
-            <Box sx={{ spaceY: 2 }}>
-              {reviews.map((review) => (
-                <Paper key={review.reviewId} sx={{ p: 2, mb: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography fontWeight="bold">{review.name}</Typography>
-                    <Rating value={review.rating} readOnly size="small" />
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {review.content}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(review.createdAt).toLocaleDateString('vi-VN')}
-                  </Typography>
-                </Paper>
-              ))}
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <CircularProgress size={30} />
+              <Typography sx={{ mt: 2 }}>Đang tải đánh giá...</Typography>
             </Box>
+          ) : reviews.length === 0 ? (
+            <Paper sx={{ p: 5, textAlign: 'center', backgroundColor: '#f9f9f9', borderRadius: 2 }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Chưa có đánh giá nào cho sản phẩm này
+              </Typography>
+              <Button variant="contained" color="primary" startIcon={<EditIcon />} onClick={handleOpenReviewModal}>
+                Viết đánh giá đầu tiên
+              </Button>
+            </Paper>
+          ) : (
+            <>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: 4 }}>
+                {reviews.map((review) => (
+                  <Paper key={review.reviewId} elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+                    {/* Đánh giá chính */}
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Box sx={{
+                        width: 44, height: 44, borderRadius: '50%',
+                        backgroundColor: '#e3f2fd', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontWeight: 'bold', color: '#1976d2', fontSize: '1.2rem'
+                      }}>
+                        {review.fullName?.charAt(0).toUpperCase() || 'K'}
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body1" fontWeight="bold">
+                          {review.fullName || 'Khách hàng'}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                          <Rating value={review.rating} readOnly size="small" />
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body1" sx={{ mt: 2, color: '#333' }}>
+                          {review.content}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Phản hồi từ cửa hàng */}
+                    {review.replyReview && (
+                      <Box sx={{ mt: 3, ml: 8, pl: 4, borderLeft: '4px solid #1976d2', backgroundColor: '#f5f9ff', borderRadius: 1, py: 2, px: 3 }}>
+                        <Typography variant="body2" fontWeight="bold" color="#1976d2" gutterBottom>
+                          Phản hồi từ cửa hàng
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#333' }}>
+                          {review.replyReview.content || 'Cảm ơn quý khách đã đánh giá!'}
+                        </Typography>
+                        {review.replyReview.createAt && review.replyReview.createAt !== '0001-01-01T00:00:00' && (
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                            {new Date(review.replyReview.createAt).toLocaleDateString('vi-VN')}
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+                  </Paper>
+                ))}
+              </Box>
+
+              {/* NÚT VIẾT ĐÁNH GIÁ */}
+              <Box sx={{ textAlign: 'center', mt: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<EditIcon />}
+                  onClick={handleOpenReviewModal}
+                  sx={{
+                    borderRadius: 30,
+                    px: 4,
+                    py: 1.5,
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    boxShadow: '0 4px 12px rgba(211, 47, 47, 0.3)',
+                    '&:hover': { boxShadow: '0 6px 16px rgba(211, 47, 47, 0.4)' }
+                  }}
+                >
+                  Viết đánh giá của bạn
+                </Button>
+              </Box>
+            </>
           )}
         </Box>
 

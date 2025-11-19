@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Container, Typography } from '@mui/material';
+import { Box, Container, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import API from '../../services/api';
 import styles from './FlashSale.module.css';
@@ -11,10 +11,8 @@ const FlashSale = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // === KIỂM TRA CÓ DỮ LIỆU HAY KHÔNG ===
   const hasAnyFlashSale = 
-    (flashSaleData.today && flashSaleData.today.length > 0) || 
-    (flashSaleData.tomorrow && flashSaleData.tomorrow.length > 0);
+    (flashSaleData.today?.length > 0) || (flashSaleData.tomorrow?.length > 0);
 
   const isSlotActiveByNow = (slot, now = new Date()) => {
     if (!slot) return false;
@@ -45,40 +43,26 @@ const FlashSale = () => {
 
   const fetchFlashSaleData = async () => {
     try {
-      const resp = await API.get('/FlashSale/get-flashsale-today-and-tomorrow', {
-      timeout: 5000
-    });
+      const resp = await API.get('/FlashSale/get-flashsale-today-and-tomorrow', { timeout: 8000 });
       const today = sortSlots(resp.data.today || []);
       const tomorrow = sortSlots(resp.data.tomorrow || []);
       setFlashSaleData({ today, tomorrow });
 
       const now = new Date();
       const active = today.find(s => isSlotActiveByNow(s, now));
-      if (active) {
-        setSelectedTimeSlot(active);
-        return;
+      if (active) setSelectedTimeSlot(active);
+      else {
+        const next = today.find(s => new Date(`${s.dateSale}T${s.startTime}`) > now);
+        setSelectedTimeSlot(next || today[0] || tomorrow[0]);
       }
-      const nextFuture = today.find(s => new Date(`${s.dateSale}T${s.startTime}`) > now);
-      if (nextFuture) {
-        setSelectedTimeSlot(nextFuture);
-        return;
-      }
-      if (today.length) {
-        setSelectedTimeSlot(today[0]);
-        return;
-      }
-      if (tomorrow.length) setSelectedTimeSlot(tomorrow[0]);
     } catch (err) {
-    console.error('Lỗi lấy Flash Sale:', err);
-    setFlashSaleData({ today: [], tomorrow: [] }); // KHIỂM TRA AN TOÀN
-  } finally {
-    setLoading(false);
-  }
-};
+      console.error('Lỗi lấy Flash Sale:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-
-
-  // === ĐẾM NGƯỢC ===
+  // ĐẾM NGƯỢC SIÊU MƯỢT
   useEffect(() => {
     if (!activeSlot) {
       setCountdown('');
@@ -89,10 +73,12 @@ const FlashSale = () => {
       const now = new Date();
       const end = new Date(`${activeSlot.dateSale}T${activeSlot.endTime}`);
       const diff = end - now;
+
       if (diff <= 0) {
         setCountdown('');
         return;
       }
+
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
@@ -100,11 +86,10 @@ const FlashSale = () => {
     };
 
     tick();
-    const t = setInterval(tick, 1000);
-    return () => clearInterval(t);
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
   }, [activeSlot]);
 
-  // === HÀM HỖ TRỢ ===
   const formatPrice = (p) => (typeof p === 'number' ? p.toLocaleString('vi-VN') : p);
   const calculateDiscount = (o, s) => o ? Math.round(((o - s) / o) * 100) : 0;
 
@@ -112,141 +97,164 @@ const FlashSale = () => {
     if (!countdown) return null;
     const [h, m, s] = countdown.split(':');
     return (
-      <div className={styles.countdownDigits}>
-        <span className={styles.digit}>{h}</span>
+      <div className={styles.countdown}>
+        <div className={styles.timeBox}><span>{h}</span></div>
         <span className={styles.colon}>:</span>
-        <span className={styles.digit}>{m}</span>
+        <div className={styles.timeBox}><span>{m}</span></div>
         <span className={styles.colon}>:</span>
-        <span className={styles.digit}>{s}</span>
+        <div className={styles.timeBox}><span>{s}</span></div>
       </div>
     );
   };
 
-  const formatTimeButtonContent = (slot) => {
-    const now = new Date();
-    const isActive = activeSlot?.flashSaleId === slot.flashSaleId;
-    const isFuture = new Date(`${slot.dateSale}T${slot.startTime}`) > now;
-    const isTomorrow = flashSaleData.tomorrow?.some(s => s.flashSaleId === slot.flashSaleId);
-
-    return (
-      <div className={styles.slotInner}>
-        {isActive && <div className={`${styles.slotLabel} ${styles.activeLabel}`}>Đang diễn ra</div>}
-        {!isActive && isFuture && !isTomorrow && <div className={styles.slotLabel}>Sắp diễn ra</div>}
-        {!isActive && !isFuture && !isTomorrow && <div className={styles.slotLabelDisabled}>Đã kết thúc</div>}
-        {isTomorrow && <div className={styles.slotLabel}>Ngày mai</div>}
-
-        <div className={styles.slotTimeLarge}>
-          {isActive
-            ? `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)}`
-            : slot.startTime.substring(0, 5)}
-        </div>
-
-        {isActive && <div className={styles.countdownWrap}>{renderCountdown()}</div>}
-      </div>
-    );
-  };
-
-  // === ẨN TOÀN BỘ NẾU KHÔNG CÓ DỮ LIỆU ===
   if (loading) return null;
-
-  if (!hasAnyFlashSale) {
-    return null; // ẨN HOÀN TOÀN
-  }
+  if (!hasAnyFlashSale) return null;
 
   return (
-    <Box sx={{ py: 2 }}>
+    <Box sx={{ 
+      bgcolor: 'background.default',  // Lấy nền chính từ theme (trắng hoặc xám nhạt)
+      backgroundImage: 'inherit',     // Kế thừa nền từ trang home nếu có
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      py: { xs: 3, md: 5 }
+    }}>
       <Container maxWidth="lg">
-        <Box className={styles.flashSaleContainer}>
-          <Box className={styles.flashSaleHeader}>
-            <Typography variant="h4" className={styles.title}>
-              {selectedTimeSlot?.flashSaleName || 'FLASH SALE'}
+        {/* HEADER SIÊU BẮT MẮT */}
+        <Box className={styles.header}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box className={styles.flashIcon}>FLASH SALE</Box>
+            <Typography variant="h3" sx={{ fontWeight: 900, color: 'white', letterSpacing: '-1px' }}>
+              {selectedTimeSlot?.flashSaleName || 'SIÊU SALE GIỜ VÀNG'}
             </Typography>
           </Box>
-
-          <div className={styles.divider}>
-            <Box className={styles.timeSlots}>
-              {(flashSaleData.today || []).map(slot => (
-                <div
-                  key={slot.flashSaleId}
-                  className={`${styles.timeSlotButton} ${selectedTimeSlot?.flashSaleId === slot.flashSaleId ? styles.active : ''}`}
-                  onClick={() => setSelectedTimeSlot(slot)}
-                  role="button"
-                >
-                  {formatTimeButtonContent(slot)}
-                </div>
-              ))}
-
-              {(flashSaleData.tomorrow || []).map(slot => (
-                <div
-                  key={slot.flashSaleId}
-                  className={`${styles.timeSlotButton} ${selectedTimeSlot?.flashSaleId === slot.flashSaleId ? styles.active : ''}`}
-                  onClick={() => setSelectedTimeSlot(slot)}
-                  role="button"
-                >
-                  {formatTimeButtonContent(slot)}
-                </div>
-              ))}
+          {activeSlot && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography sx={{ fontSize: '1.1rem', color: '#d70018', fontWeight: 'bold' }}>
+                Kết thúc trong:
+              </Typography>
+              {renderCountdown()}
             </Box>
-          </div>
+          )}
+        </Box>
 
-          <Box className={styles.productGrid}>
-            {(!selectedTimeSlot || !selectedTimeSlot.items || selectedTimeSlot.items.length === 0) ? (
-              <div className={styles.emptyState}>Không có sản phẩm flash sale</div>
-            ) : (
-              <ul className={styles.listproduct}>
-                {selectedTimeSlot.items.map(item => {
-                  const discountPercent = calculateDiscount(item.product.originalPrice, item.sellPrice);
-                  return (
-                    <li key={item.itemId} className={styles.item}>
-                      <a
-                        onClick={() => navigate(`/product-detail/${item.product.productId}`)}
-                        className={styles.mainContain}
-                      >
-                        {discountPercent > 0 && (
-                          <div className={styles.discountBadge}>-{discountPercent}%</div>
-                        )}
+        {/* KHUNG GIỜ */}
+        <Box className={styles.timeSlotsWrapper}>
+          <Box className={styles.timeSlots}>
+            {(flashSaleData.today || []).map(slot => {
+              const isActive = activeSlot?.flashSaleId === slot.flashSaleId;
+              const isFuture = new Date(`${slot.dateSale}T${slot.startTime}`) > new Date();
+              const isSelected = selectedTimeSlot?.flashSaleId === slot.flashSaleId;
 
-                        <div className={styles.itemImg}>
-                          <img
-                            className={styles.thumb}
-                            src={item.product.imageUrl || '/placeholder-product.jpg'}
-                            alt={item.product.productName}
-                            loading="lazy"
-                            onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
-                          />
-                        </div>
+              return (
+                <Button
+                  key={slot.flashSaleId}
+                  onClick={() => setSelectedTimeSlot(slot)}
+                  className={`${styles.timeSlot} ${isSelected ? styles.selected : ''} ${isActive ? styles.activeSlot : ''}`}
+                >
+                  <Box className={styles.slotContent}>
+                    {isActive && <div className={styles.liveBadge}>LIVE</div>}
+                    {!isActive && isFuture && <div className={styles.soonBadge}>Sắp diễn ra</div>}
+                    {!isActive && !isFuture && <div className={styles.endedBadge}>Đã kết thúc</div>}
 
-                        <h4 className={styles.prodName} title={item.product.productName}>
-                          {item.product.productName}
-                        </h4>
+                    <Typography className={styles.slotTime}>
+                      {slot.startTime.substring(0, 5)}
+                    </Typography>
+                    {isActive && renderCountdown()}
+                  </Box>
+                </Button>
+              );
+            })}
 
-                        <div className={styles.priceRow}>
-                          <strong className={styles.priceMain}>
-                            {isSlotActiveByNow(selectedTimeSlot)
-                              ? `${formatPrice(item.sellPrice)}₫`
-                              : `${Math.floor(item.sellPrice / 1000000)}.xxx.000`}
-                          </strong>
-                          <span className={styles.priceOld}>
-                            {formatPrice(item.product.originalPrice)}₫
-                          </span>
-                        </div>
-
-                        <div className={styles.saleDesc}>
-                          {selectedTimeSlot?.description}
-                        </div>
-
-                        <div className={styles.itemBottom}>
-                          <span className={styles.stockCount}>
-                            Còn {item.quantity} suất
-                          </span>
-                        </div>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            {/* Ngày mai */}
+            {(flashSaleData.tomorrow || []).slice(0, 3).map(slot => (
+              <Button
+                key={slot.flashSaleId}
+                onClick={() => setSelectedTimeSlot(slot)}
+                className={`${styles.timeSlot} ${styles.tomorrowSlot} ${selectedTimeSlot?.flashSaleId === slot.flashSaleId ? styles.selected : ''}`}
+              >
+                <Box className={styles.slotContent}>
+                  <div className={styles.tomorrowLabel}>Ngày mai</div>
+                  <Typography className={styles.slotTime}>
+                    {slot.startTime.substring(0, 5)}
+                  </Typography>
+                </Box>
+              </Button>
+            ))}
           </Box>
+        </Box>
+
+        {/* DANH SÁCH SẢN PHẨM */}
+        <Box className={styles.productGrid}>
+          {!selectedTimeSlot || selectedTimeSlot.items?.length === 0 ? (
+            <Box className={styles.emptyState}>
+              <Typography variant="h5" color="text.secondary">
+                Không có sản phẩm trong khung giờ này
+              </Typography>
+            </Box>
+          ) : (
+            <Box className={styles.productList}>
+              {selectedTimeSlot.items.map(item => {
+                const discount = calculateDiscount(item.product.originalPrice, item.sellPrice);
+                const isActiveNow = isSlotActiveByNow(selectedTimeSlot);
+
+                return (
+                  <Box
+                    key={item.itemId}
+                    className={styles.productCard}
+                    onClick={() => navigate(`/product-detail/${item.product.productId}`)}
+                  >
+                    <Box className={styles.imageWrapper}>
+                      <img
+                        src={item.product.imageUrl || '/placeholder-product.jpg'}
+                        alt={item.product.productName}
+                        className={styles.productImage}
+                        loading="lazy"
+                        onError={(e) => e.target.src = '/placeholder-product.jpg'}
+                      />
+                      {discount > 0 && (
+                        <Box className={styles.discountTag}>
+                          -{discount}%
+                        </Box>
+                      )}
+                      {isActiveNow && item.quantity <= 10 && (
+                        <Box className={styles.hotTag}>Sắp hết!</Box>
+                      )}
+                    </Box>
+
+                    <Box className={styles.productInfo}>
+                      <Typography className={styles.productName} noWrap>
+                        {item.product.productName}
+                      </Typography>
+
+                      <Box className={styles.priceSection}>
+                        <Typography className={styles.flashPrice}>
+                          {isActiveNow 
+                            ? `${formatPrice(item.sellPrice)}₫`
+                            : '?.???.000₫'
+                          }
+                        </Typography>
+                        {item.product.originalPrice > item.sellPrice && (
+                          <Typography className={styles.originalPrice}>
+                            {formatPrice(item.product.originalPrice)}₫
+                          </Typography>
+                        )}
+                      </Box>
+
+                      <Box className={styles.stockBar}>
+                        <Box 
+                          className={styles.stockFill} 
+                          style={{ width: `${Math.min(100, (item.quantity / 50) * 100)}%` }}
+                        />
+                        <Typography className={styles.stockText}>
+                          Còn {item.quantity} suất
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
         </Box>
       </Container>
     </Box>
