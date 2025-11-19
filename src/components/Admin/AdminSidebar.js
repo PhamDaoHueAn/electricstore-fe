@@ -15,7 +15,8 @@ import {
   FlashOn,
   Business,
   QuestionAnswer,
-  AccountCircle
+  AccountCircle,
+  LocalShipping
 } from '@mui/icons-material';
 const AdminSidebar = ({ open = true }) => {
   const location = useLocation();
@@ -33,6 +34,7 @@ const AdminSidebar = ({ open = true }) => {
     { text: 'Quản lý Banner', path: '/admin/banners', icon: <Wallpaper />, color: '#ffffffff' },
     { text: 'Quản lý Flash Sale', path: '/admin/flashsale', icon: <FlashOn />, color: '#ffffffff' },
     { text: 'Quản lý Nhà cung cấp', path: '/admin/suppliers', icon: <Business />, color: '#ffffffff' },
+    { text: 'Quản lý Nhập hàng', path: '/admin/imports', icon: <LocalShipping />, color: '#ffffffff' },
     { text: 'Quản lý Hỏi & Đáp', path: '/admin/qna', icon: <QuestionAnswer />, color: '#ffffffff' },
 
 
