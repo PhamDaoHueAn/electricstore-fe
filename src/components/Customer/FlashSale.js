@@ -11,7 +11,7 @@ const FlashSale = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const hasAnyFlashSale = 
+  const hasAnyFlashSale =
     (flashSaleData.today?.length > 0) || (flashSaleData.tomorrow?.length > 0);
 
   const isSlotActiveByNow = (slot, now = new Date()) => {
@@ -109,16 +109,9 @@ const FlashSale = () => {
 
   if (loading) return null;
   if (!hasAnyFlashSale) return null;
-
   return (
-    <Box sx={{ 
-      bgcolor: 'background.default',  // Lấy nền chính từ theme (trắng hoặc xám nhạt)
-      backgroundImage: 'inherit',     // Kế thừa nền từ trang home nếu có
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      py: { xs: 3, md: 5 }
-    }}>
-      <Container maxWidth="lg">
+    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
+      <Box className={styles.flashSaleContainer}>
         {/* HEADER SIÊU BẮT MẮT */}
         <Box className={styles.header}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -129,7 +122,7 @@ const FlashSale = () => {
           </Box>
           {activeSlot && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography sx={{ fontSize: '1.1rem', color: '#d70018', fontWeight: 'bold' }}>
+              <Typography sx={{ fontSize: '1.1rem', color: '#ffffffff', fontWeight: 'bold' }}>
                 Kết thúc trong:
               </Typography>
               {renderCountdown()}
@@ -228,7 +221,7 @@ const FlashSale = () => {
 
                       <Box className={styles.priceSection}>
                         <Typography className={styles.flashPrice}>
-                          {isActiveNow 
+                          {isActiveNow
                             ? `${formatPrice(item.sellPrice)}₫`
                             : '?.???.000₫'
                           }
@@ -241,8 +234,8 @@ const FlashSale = () => {
                       </Box>
 
                       <Box className={styles.stockBar}>
-                        <Box 
-                          className={styles.stockFill} 
+                        <Box
+                          className={styles.stockFill}
                           style={{ width: `${Math.min(100, (item.quantity / 50) * 100)}%` }}
                         />
                         <Typography className={styles.stockText}>
@@ -256,8 +249,8 @@ const FlashSale = () => {
             </Box>
           )}
         </Box>
-      </Container>
-    </Box>
+      </Box>
+    </Container>
   );
 };
 

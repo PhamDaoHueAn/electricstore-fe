@@ -82,7 +82,7 @@ const Home = () => {
       const response = await API.get('/Products/GetAll', {
         params: {
           pageNumber: currentPage,
-          pageSize: pageSize,
+          pageSize: 10,
           sortBy: 'CreatedAt',
           sortOrder: 'desc',
           categoryId: selectedCategory || undefined,
@@ -92,16 +92,7 @@ const Home = () => {
       });
 
       const { data, totalPages } = response.data;
-      const productsWithRating = (data || []).map(product => {
-        const reviews = Array.isArray(product.productReview) ? product.productReview : [];
-        const activeReviews = reviews.filter(r => r.isActive);
-        const averageRating = activeReviews.length > 0
-          ? activeReviews.reduce((sum, r) => sum + r.rating, 0) / activeReviews.length
-          : 0;
-        return { ...product, averageRating: parseFloat(averageRating.toFixed(1)) };
-      });
-
-      setProducts(productsWithRating);
+      setProducts(data || []);
       setTotalPages(totalPages || 1);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -287,7 +278,7 @@ const Home = () => {
 
                         </h3>
                         <div className={styles.itemCompare}>
-                          {product.manufactureYear && <span>{product.manufactureYear}W</span>}
+                          {product.manufactureYear && <span>{product.manufactureYear}</span>}
                         </div>
                         <p className={styles.itemTxtOnline}>
                           <i></i>
@@ -308,15 +299,11 @@ const Home = () => {
                         )}
 
                       </a>
-                      <div className={styles.itemBottom}>
-                        <a href="javascript:;" className={styles.shiping} aria-label="shiping">
-                          <i className="bi bi-truck"></i>
-                        </a>
-                      </div>
+
                       <div className={styles.ratingCompare}>
                         <div className={styles.voteTxt}>
                           <i></i>
-                          <b>{product.averageRating || 0}</b>
+                          <b>{product.averageRating || product.AverageRating || 0}</b>
                         </div>
                         <span className={styles.stockCount}>• Tồn kho {product.stockQuantity?.toLocaleString('vi-VN') || 0}</span>
                       </div>

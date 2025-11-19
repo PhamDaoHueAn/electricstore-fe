@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  AppBar, Toolbar, Typography, Button, IconButton, TextField, 
+import {
+  AppBar, Toolbar, Typography, Button, IconButton, TextField,
   Autocomplete, CircularProgress, Menu, MenuItem, Avatar   // ← THÊM Avatar
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -8,6 +8,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import API from '../services/api';
 import styles from './Header.module.css';
+import logo from '../images/logo.png';
 
 const GUEST_CART_KEY = 'guestCart';
 
@@ -192,19 +193,22 @@ const Header = () => {
   };
 
   return (
-    <AppBar position="static" className={styles.header}>
+    <AppBar position="fixed" className={styles.header} sx={{ backgroundColor: '#009EE1' }}>
       <Toolbar>
         {/* Logo + Dropdown Danh mục */}
         <div className={styles.logoSection}>
-          <Typography
-            variant="h5"
-            component="a"
+          <a
             href="/"
             onClick={(e) => { e.preventDefault(); navigate('/'); }}
             className={styles.logo}
           >
-            Điện Máy Xanh
-          </Typography>
+            <img
+              src={logo}
+              alt="Logo"
+              className={styles.logoImage}
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </a>
 
           <Button
             color="inherit"
@@ -277,7 +281,7 @@ const Header = () => {
             />
             <Button
               variant="contained"
-              color="primary"
+              color="#009EE1"
               onClick={handleSearch}
               className={styles.searchButton}
             >
@@ -313,6 +317,7 @@ const Header = () => {
                 {username}
               </Typography>
               <Button
+                color='red'
                 variant="contained"
                 onClick={handleLogoutClick}
                 className={styles.logoutButton}
@@ -323,7 +328,7 @@ const Header = () => {
           ) : (
             <Button
               variant="contained"
-              color="primary"
+              color="#009EE1"
               onClick={() => navigate('/login')}
               className={styles.loginButton}
             >
@@ -334,10 +339,11 @@ const Header = () => {
           {/* Giỏ hàng */}
           <Button
             variant="contained"
-            color="primary"
+            color="#009EE1"
             onClick={() => navigate('/cart')}
             className={styles.cartButton}
             startIcon={<ShoppingCartIcon />}
+
           >
             Giỏ hàng
             {cartCount > 0 && (

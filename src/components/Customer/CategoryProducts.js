@@ -103,134 +103,155 @@ const CategoryProducts = () => {
   };
 
   return (
-    <Container maxWidth="lg" className={styles.container}>
-      <Typography variant="h4" className={styles.title}>
-        Sản phẩm theo danh mục
-      </Typography>
-      {/* Brand Carousel */}
-      {brands.length > 0 && (
-        <section className={styles.brandMenu}>
-          <div className={styles.listBrands}>
-            <Slider {...brandSliderSettings}>
-              {brands.map((brand) => (
-                <div
-                  key={brand.brandId}
-                  className={`${styles.brandItem} ${selectedBrand === brand.brandId ? styles.selected : ''}`}
-                >
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleBrandClick(brand.brandId);
-                    }}
+    <div className={styles.container}>
+      <Container maxWidth="lg">
+        <Typography variant="h4" className={styles.title}>
+          Sản phẩm theo danh mục
+        </Typography>
+
+        {/* Brand Carousel */}
+        {brands.length > 0 && (
+          <section className={styles.brandMenu}>
+            <div className={styles.listBrands}>
+              <Slider {...brandSliderSettings}>
+                {brands.map((brand) => (
+                  <div
+                    key={brand.brandId}
+                    className={`${styles.brandItem} ${selectedBrand === brand.brandId ? styles.selected : ''}`}
                   >
-                    <img
-                      src={brand.imageUrl || '/images/brand-placeholder.jpg'}
-                      alt={brand.brandName}
-                      width="47"
-                      height="47"
-                      onError={(e) => { e.target.src = '/images/brand-placeholder.jpg'; }}
-                    />
-                    <p>{brand.brandName}</p>
-                  </a>
-                </div>
-              ))}
-            </Slider>
-          </div>
-        </section>
-      )}
-      {/* Sort Select */}
-      <FormControl className={styles.sortContainer}>
-        <InputLabel>Sắp xếp theo</InputLabel>
-        <Select
-          value={`${sortBy}:${sortOrder}`}
-          onChange={handleSortChange}
-          label="Sắp xếp theo"
-          className={styles.sortSelect}
-        >
-          <MenuItem value="CreatedAt:desc">Mới nhất</MenuItem>
-          <MenuItem value="Price:asc">Giá: Thấp đến Cao</MenuItem>
-          <MenuItem value="Price:desc">Giá: Cao đến Thấp</MenuItem>
-        </Select>
-      </FormControl>
-      {/* Product List */}
-      {loading ? (
-        <CircularProgress sx={{ display: 'block', mx: 'auto', mt: 4 }} />
-      ) : products.length === 0 ? (
-        <Box className={styles.noResults}>
-          <Typography variant="h6">Không tìm thấy sản phẩm phù hợp</Typography>
-        </Box>
-      ) : (
-        <Box className={styles.productGrid}>
-          <ul className={styles.listproduct}>
-            {products.map((product, index) => (
-              <li key={product.productId} className={styles.item} data-index={index + 1}>
-                <a
-                  onClick={() => navigate(`/product-detail/${product.productId}`)}
-                  className={styles.mainContain}
-                >
-                  <div className={styles.itemLabel}>
-                    {product.manufactureYear >= 2025 && <span className={styles.lnNew}>Mẫu mới</span>}
-                    
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleBrandClick(brand.brandId);
+                      }}
+                    >
+                      <img
+                        src={brand.imageUrl || '/images/brand-placeholder.jpg'}
+                        alt={brand.brandName}
+                        width="47"
+                        height="47"
+                        onError={(e) => { e.target.src = '/images/brand-placeholder.jpg'; }}
+                      />
+                      <p>{brand.brandName}</p>
+                    </a>
                   </div>
-                  <div className={styles.itemImg}>
-                    <img
-                      className={styles.thumb}
-                      src={product.mainImage || '/images/placeholder-product.jpg'}
-                      alt={product.productName}
-                      loading="lazy"
-                      onError={(e) => { e.target.src = '/images/placeholder-product.jpg'; }}
-                    />
-                  </div>
-                  
-                  <h3>
-                    {product.productName}
-                    
-                  </h3>
-                  <div className={styles.itemCompare}>
-                    {product.manufactureYear && <span>{product.manufactureYear}</span>}
-                    
-                  </div>
-                  <p className={styles.itemTxtOnline}>
-                    <i></i>
-                    <span>Online giá rẻ quá</span>
-                  </p>
-                  <strong className={styles.price}>
-                    {product.sellPrice.toLocaleString('vi-VN')}₫
-                  </strong>
-                  {product.originalPrice > 0 && (
-                    <div className={styles.boxP}>
-                      <p className={styles.priceOld}>
-                        {product.originalPrice.toLocaleString('vi-VN')}₫
-                      </p>
-                      <span className={styles.percent}>
-                        {Math.round(((product.originalPrice - product.sellPrice) / product.originalPrice) * 100)}%
-                      </span>
+                ))}
+              </Slider>
+            </div>
+          </section>
+        )}
+
+        {/* Sort Select */}
+        <FormControl className={styles.sortContainer}>
+          <InputLabel>Sắp xếp theo</InputLabel>
+          <Select
+            value={`${sortBy}:${sortOrder}`}
+            onChange={handleSortChange}
+            label="Sắp xếp theo"
+            className={styles.sortSelect}
+          >
+            <MenuItem value="CreatedAt:desc">Mới nhất</MenuItem>
+            <MenuItem value="Price:asc">Giá: Thấp đến Cao</MenuItem>
+            <MenuItem value="Price:desc">Giá: Cao đến Thấp</MenuItem>
+          </Select>
+        </FormControl>
+
+        {/* Product List */}
+        {loading ? (
+          <CircularProgress sx={{ display: 'block', mx: 'auto', mt: 4 }} />
+        ) : products.length === 0 ? (
+          <Box className={styles.noResults}>
+            <Typography variant="h6">Không tìm thấy sản phẩm phù hợp</Typography>
+          </Box>
+        ) : (
+          <Box className={styles.productGrid}>
+            <ul className={styles.listproduct}>
+              {products.map((product) => (
+                <li key={product.productId} className={styles.item}>
+                  <a
+                    onClick={() => navigate(`/product-detail/${product.productId}`)}
+                    className={styles.mainContain}
+                  >
+                    <div className={styles.itemLabel}>
+                      {product.manufactureYear >= 2025 && <span className={styles.lnNew}>Mẫu mới</span>}
                     </div>
-                  )}
-                  
-                </a>
-                
-                <div className={styles.ratingCompare}>
-                  <div className={styles.voteTxt}>
-                    <i></i>
-                    <b>{(product.averageRating || 0).toFixed(1)}</b>
+                    <div className={styles.itemImg}>
+                      <img
+                        className={styles.thumb}
+                        src={product.mainImage || '/images/placeholder-product.jpg'}
+                        alt={product.productName}
+                        loading="lazy"
+                        onError={(e) => { e.target.src = '/images/placeholder-product.jpg'; }}
+                      />
+                    </div>
+                    <h3>{product.productName}</h3>
+                    <div className={styles.itemCompare}>
+                      {product.manufactureYear && <span>{product.manufactureYear}W</span>}
+                    </div>
+                    <p className={styles.itemTxtOnline}>
+                      <i></i>
+                      <span>Online giá rẻ quá</span>
+                    </p>
+                    <strong className={styles.price}>
+                      {product.sellPrice.toLocaleString('vi-VN')}₫
+                    </strong>
+                    {product.originalPrice > 0 && (
+                      <div className={styles.boxP}>
+                        <p className={styles.priceOld}>
+                          {product.originalPrice.toLocaleString('vi-VN')}₫
+                        </p>
+                        <span className={styles.percent}>
+                          -{Math.round(((product.originalPrice - product.sellPrice) / product.originalPrice) * 100)}%
+                        </span>
+                      </div>
+                    )}
+                  </a>
+                  <div className={styles.itemBottom}>
+                    <a href="javascript:;" className={styles.shiping} aria-label="shiping">
+                      <i className="bi bi-truck"></i>
+                    </a>
                   </div>
-                  <span className={styles.stockCount}>• Tồn kho {product.stockQuantity.toLocaleString('vi-VN')}</span>
-                  
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Box>
-      )}
-      <Pagination
-        count={totalPages}
-        page={pageNumber}
-        onChange={handlePageChange}
-        className={styles.pagination}
-      />
-    </Container>
+                  <div className={styles.ratingCompare}>
+                    <div className={styles.voteTxt}>
+                      <i></i>
+                      <b>{product.averageRating || product.AverageRating || 0}</b>
+                    </div>
+                    <span className={styles.stockCount}>• Tồn kho {product.stockQuantity?.toLocaleString('vi-VN') || 0}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Box>
+        )}
+
+        {totalPages > 1 && (
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            mt: 4,
+            pb: 4,
+            '& .MuiPaginationItem-root': {
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              color: '#666',
+              fontWeight: 500,
+            },
+            '& .MuiPaginationItem-root.Mui-selected': {
+              backgroundColor: '#e91e63',
+              color: 'white',
+            }
+          }}>
+            <Pagination
+              count={totalPages}
+              page={pageNumber}
+              onChange={handlePageChange}
+              color="primary"
+              size="large"
+            />
+          </Box>
+        )}
+      </Container>
+    </div>
   );
 };
 

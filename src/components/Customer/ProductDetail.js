@@ -111,8 +111,8 @@ const ProductDetail = () => {
       });
       if (response.data?.data) {
         const filtered = response.data.data
-          .filter(p => 
-            p.productId !== parseInt(productId) && 
+          .filter(p =>
+            p.productId !== parseInt(productId) &&
             p.categoryId === product.categoryId
           )
           .slice(0, 4);
@@ -225,14 +225,14 @@ const ProductDetail = () => {
       formData.append('ParentID', 0);
 
       let response;
-      
+
       response = await API.post('/ProductReview/create', formData, {
-        headers: { 
+        headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`
         }
       });
-      
+
 
       setReviews([...reviews, response.data]);
       alert('Gửi đánh giá thành công! - Chờ phê duyệt từ quản trị viên.');
@@ -294,9 +294,8 @@ const ProductDetail = () => {
 
   const images = [mainImage, ...(subImages || [])].filter(Boolean);
 
-  const averageRating = productReview && productReview.length > 0
-    ? productReview.reduce((s, r) => s + (r.isActive ? r.rating : 0), 0) / productReview.filter(r => r.isActive).length
-    : 0;
+  // Backend đã tính averageRating sẵn, chỉ cần lấy ra
+  const averageRating = product.averageRating || 0;
 
   return (
     <Container maxWidth="lg" className={styles.container}>
@@ -308,48 +307,48 @@ const ProductDetail = () => {
 
         <Grid container spacing={4}>
           {/* HÌNH ẢNH */}
-          
-<Grid item xs={12} md={6}>
-  <Paper elevation={2}>
-    <Slider
-      ref={sliderRef}
-      dots={false}
-      infinite={images.length > 1}
-      speed={500}
-      slidesToShow={1}
-      arrows={images.length > 1}
-      afterChange={(index) => setCurrentSlide(index)}
-    >
-      {images.map((img, i) => (
-        <img
-          key={i}
-          src={getImageUrl(img)}
-          alt={`${productName} ${i + 1}`}
-          className={styles.mainImage}
-          onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
-        />
-      ))}
-    </Slider>
 
-    {/* THUMBNAIL NGANG */}
-    <Box className={styles.sliderImg}>
-      {images.map((img, i) => (
-        <Box
-          key={i}
-          className={`${styles.sliderBox} ${currentSlide === i ? styles.active : ''}`}
-          onClick={() => sliderRef.current?.slickGoTo(i)}
-        >
-          <img
-            src={getImageUrl(img)}
-            alt={`Thumb ${i + 1}`}
-            className={styles.thumbnailImage}
-            onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
-          />
-        </Box>
-      ))}
-    </Box>
-  </Paper>
-</Grid>
+          <Grid item xs={12} md={6}>
+            <Paper elevation={2}>
+              <Slider
+                ref={sliderRef}
+                dots={false}
+                infinite={images.length > 1}
+                speed={500}
+                slidesToShow={1}
+                arrows={images.length > 1}
+                afterChange={(index) => setCurrentSlide(index)}
+              >
+                {images.map((img, i) => (
+                  <img
+                    key={i}
+                    src={getImageUrl(img)}
+                    alt={`${productName} ${i + 1}`}
+                    className={styles.mainImage}
+                    onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                  />
+                ))}
+              </Slider>
+
+              {/* THUMBNAIL NGANG */}
+              <Box className={styles.sliderImg}>
+                {images.map((img, i) => (
+                  <Box
+                    key={i}
+                    className={`${styles.sliderBox} ${currentSlide === i ? styles.active : ''}`}
+                    onClick={() => sliderRef.current?.slickGoTo(i)}
+                  >
+                    <img
+                      src={getImageUrl(img)}
+                      alt={`Thumb ${i + 1}`}
+                      className={styles.thumbnailImage}
+                      onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            </Paper>
+          </Grid>
 
           {/* THÔNG TIN */}
           <Grid item xs={12} md={6}>
@@ -358,7 +357,7 @@ const ProductDetail = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Rating value={averageRating} readOnly precision={0.1} size="small" />
               <Typography variant="body2" color="text.secondary">
-                ({averageRating.toFixed(1)} • {productReview?.filter(r => r.isActive).length || 0} đánh giá)
+                ({averageRating.toFixed(1)} • {reviews.length} đánh giá)
               </Typography>
             </Box>
 
@@ -397,7 +396,7 @@ const ProductDetail = () => {
               </Button>
             </Box>
 
-            
+
 
             {/* THÔNG SỐ KỸ THUẬT */}
             <Box sx={{ mt: 5 }}>
@@ -416,13 +415,13 @@ const ProductDetail = () => {
                           const value = hasColon ? point.split(':').slice(1).join(':').trim() : '';
 
                           return (
-                            <tr key={index} style={{ 
+                            <tr key={index} style={{
                               backgroundColor: index % 2 === 0 ? '#fdfdfd' : '#ffffff',
                               borderBottom: '1px solid #eee'
                             }}>
-                              <td style={{ 
-                                padding: '14px 16px', 
-                                fontWeight: 'bold', 
+                              <td style={{
+                                padding: '14px 16px',
+                                fontWeight: 'bold',
                                 color: '#333',
                                 width: '45%',
                                 verticalAlign: 'top',
@@ -430,8 +429,8 @@ const ProductDetail = () => {
                               }}>
                                 {label}
                               </td>
-                              <td style={{ 
-                                padding: '14px 16px', 
+                              <td style={{
+                                padding: '14px 16px',
                                 color: '#555',
                                 verticalAlign: 'top',
                                 fontSize: '0.95rem'
@@ -637,7 +636,7 @@ const ProductDetail = () => {
               sx={{ mb: 2 }}
             />
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', GAP: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', GAP: 1 }}>
               <Button onClick={handleCloseReviewModal} disabled={isSubmitting}>Hủy</Button>
               <Button
                 onClick={handleSubmitReview}

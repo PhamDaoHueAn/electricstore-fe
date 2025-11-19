@@ -1,12 +1,20 @@
 .header {
-  background-color: #0560e7;
+  background-color: #009EE1 !important;
 }
 
 .logo {
-  color: white;
   text-decoration: none;
   margin-right: 16px;
-  flex: 0 0 auto; /* Không mở rộng */
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.logoImage {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+  cursor: pointer;
 }
 
 .logoSection {
@@ -39,7 +47,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 0; /* Ngăn flex co nhỏ quá mức */
+  min-width: 0;
+  /* Ngăn flex co nhỏ quá mức */
 }
 
 .searchBox {
@@ -47,7 +56,8 @@
   gap: 8px;
   width: 100%;
   max-width: 600px;
-  min-width: 400px; /* Đảm bảo kích thước tối thiểu */
+  min-width: 400px;
+  /* Đảm bảo kích thước tối thiểu */
 }
 
 .searchInput {
@@ -64,7 +74,8 @@
 .searchButton {
   height: 40px;
   margin: 10px;
-  flex: 0 0 auto; /* Không mở rộng */
+  flex: 0 0 auto;
+  /* Không mở rộng */
 }
 
 .searchInput :global(.MuiOutlinedInput-notchedOutline) {
@@ -94,7 +105,8 @@
 }
 
 .searchInput :global(.MuiAutocomplete-popper) {
-  z-index: 1300 !important; /* Đảm bảo dropdown hiển thị trên AppBar */
+  z-index: 1300 !important;
+  /* Đảm bảo dropdown hiển thị trên AppBar */
 }
 
 .userActions {
@@ -112,7 +124,8 @@
   color: white;
 }
 
-.loginButton, .cartButton {
+.loginButton,
+.cartButton {
   height: 40px;
 }
 
@@ -134,16 +147,20 @@
 /* Responsive cho màn hình nhỏ */
 @media (max-width: 600px) {
   .searchBox {
-    min-width: 200px; /* Giảm kích thước tối thiểu trên mobile */
+    min-width: 200px;
+    /* Giảm kích thước tối thiểu trên mobile */
     max-width: 100%;
   }
+
   .searchInput {
     min-width: 200px !important;
     max-width: 100% !important;
   }
+
   .searchInput :global(.MuiAutocomplete-root) {
     min-width: 200px !important;
   }
+
   .searchInput :global(.MuiOutlinedInput-root) {
     min-width: 200px !important;
   }
