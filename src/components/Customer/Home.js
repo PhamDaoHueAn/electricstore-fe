@@ -284,7 +284,7 @@ const Home = () => {
                         </div>
                         <h3>
                           {product.productName}
-                          
+
                         </h3>
                         <div className={styles.itemCompare}>
                           {product.manufactureYear && <span>{product.manufactureYear}W</span>}
@@ -306,7 +306,7 @@ const Home = () => {
                             </span>
                           </div>
                         )}
-                        
+
                       </a>
                       <div className={styles.itemBottom}>
                         <a href="javascript:;" className={styles.shiping} aria-label="shiping">
@@ -325,7 +325,21 @@ const Home = () => {
                 </ul>
 
                 {totalPages > 1 && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, pb: 4 }}>
+                  <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    mt: 4,
+                    pb: 4,
+                    '& .MuiPaginationItem-root': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      color: '#666',
+                      fontWeight: 500,
+                    },
+                    '& .MuiPaginationItem-root.Mui-selected': {
+                      backgroundColor: '#1976d2',
+                      color: 'white',
+                    }
+                  }}>
                     <Pagination
                       count={totalPages}
                       page={currentPage}
@@ -346,9 +360,9 @@ const Home = () => {
           </Box>
         </Container>
       </div>
-      
+
       <>
-        
+
         <Fab
           color="primary"
           aria-label="chat"
