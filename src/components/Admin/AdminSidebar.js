@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Box, List, ListItem, ListItemText, ListItemIcon, Divider, Tooltip, Typography, Avatar } from '@mui/material';
 import {
-  Dashboard,
   Inventory,
   People,
   Group,
@@ -16,7 +15,8 @@ import {
   Business,
   QuestionAnswer,
   AccountCircle,
-  LocalShipping
+  LocalShipping,
+  Assessment
 } from '@mui/icons-material';
 const AdminSidebar = ({ open = true }) => {
   const location = useLocation();
@@ -35,6 +35,7 @@ const AdminSidebar = ({ open = true }) => {
     { text: 'Quản lý Flash Sale', path: '/admin/flashsale', icon: <FlashOn />, color: '#ffffffff' },
     { text: 'Quản lý Nhà cung cấp', path: '/admin/suppliers', icon: <Business />, color: '#ffffffff' },
     { text: 'Quản lý Nhập hàng', path: '/admin/imports', icon: <LocalShipping />, color: '#ffffffff' },
+    { text: 'Báo cáo Thống kê', path: '/admin/statistics', icon: <Assessment />, color: '#ffffffff' },
     { text: 'Quản lý Hỏi & Đáp', path: '/admin/qna', icon: <QuestionAnswer />, color: '#ffffffff' },
 
 

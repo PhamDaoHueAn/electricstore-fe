@@ -25,9 +25,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Grid,
   Autocomplete,
   TablePagination
@@ -35,16 +32,14 @@ import {
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
-  ExpandMore as ExpandMoreIcon,
-  Inventory as InventoryIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   LocalShipping as LocalShippingIcon,
   Info as InfoIcon,
   Payment as PaymentIcon
 } from '@mui/icons-material';
-import AdminLayout from './AdminLayout';
-import API from '../../services/api';
+import AdminLayout from '../AdminLayout';
+import API from '../../../services/api';
 
 const ImportManagement = () => {
   const [imports, setImports] = useState([]);
@@ -439,8 +434,20 @@ const ImportManagement = () => {
                         options={products}
                         getOptionLabel={(option) => `${option.productName} - ${option.costPrice.toLocaleString('vi-VN')}₫`}
                         renderInput={(params) => (
-                          <TextField {...params} label="Chọn Sản Phẩm" />
+                          <TextField {...params} label="Chọn Sản Phẩm" fullWidth sx={{ minWidth: 350 }} />
                         )}
+                        ListboxProps={{
+                          style: {
+                            maxHeight: 250,
+                            overflowY: 'auto',
+                            wordBreak: 'break-word',
+                            minWidth: 350
+                          }
+                        }}
+                        PaperComponent={(props) => (
+                          <Paper {...props} style={{ minWidth: 350, ...props.style }} />
+                        )}
+                        sx={{ minWidth: 350 }}
                       />
                     </Grid>
                     <Grid item xs={12} md={3}>

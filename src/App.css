@@ -13,6 +13,19 @@
   }
 }
 
+@media print {
+
+  .sidebar,
+  .MuiDrawer-root {
+    display: none !important;
+  }
+
+  .main-content {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+}
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -32,6 +45,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

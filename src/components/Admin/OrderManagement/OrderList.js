@@ -13,6 +13,8 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import EditIcon from '@mui/icons-material/Edit';
 import CancelIcon from '@mui/icons-material/Cancel';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import PrintIcon from '@mui/icons-material/Print';
+import logo from '../../../images/logo.png';
 
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
@@ -28,6 +30,7 @@ const OrderList = () => {
   const [openStatusDialog, setOpenStatusDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [printOrder, setPrintOrder] = useState(null);
 
   // Định nghĩa các trạng thái và màu sắc
   const statusConfig = {
@@ -88,6 +91,20 @@ const OrderList = () => {
     } catch (err) {
       console.error('Failed to load order details:', err);
       alert('Không thể tải chi tiết đơn hàng');
+    }
+  };
+
+  const handlePrintInvoice = async (orderCode) => {
+    try {
+      const res = await API.get(`/Order/getByOrderCode/${orderCode}`);
+      setPrintOrder(res.data);
+      // Đợi một chút để state update xong rồi mới in
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    } catch (err) {
+      console.error('Failed to load order for printing:', err);
+      alert('Không thể tải thông tin đơn hàng để in');
     }
   };
 
@@ -309,6 +326,15 @@ const OrderList = () => {
                             onClick={() => handleViewDetail(order.orderCode)}
                           >
                             <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="In hóa đơn">
+                          <IconButton
+                            color="success"
+                            size="small"
+                            onClick={() => handlePrintInvoice(order.orderCode)}
+                          >
+                            <PrintIcon />
                           </IconButton>
                         </Tooltip>
                         {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
@@ -610,6 +636,139 @@ const OrderList = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Template in hóa đơn nhỏ - chỉ hiện khi in */}
+      {/* 
+        HƯỚNG DẪN IN:
+        1. Nhấn Ctrl+P để mở hộp thoại in
+        2. Ở mục "Khổ giấy": Chọn dropdown, kéo xuống chọn "Thêm kích thước tùy chỉnh" hoặc "More settings"
+        3. Nhập: Width = 80mm, Height = 297mm (hoặc để Auto)
+        4. Lề: Chọn "Mặc định" hoặc "Minimum"
+        5. Tỷ lệ: Để 100%
+        6. Nhấn "In" hoặc "Save as PDF" để xem trước
+      */}
+      {printOrder && (
+        <Box className="print-only" sx={{ display: 'none' }}>
+          <Box sx={{ width: '80mm', margin: '0 auto', p: 1.5, fontSize: '13px', fontFamily: 'Arial, sans-serif' }}>
+            {/* Logo và header */}
+            <Box sx={{ textAlign: 'center', mb: 1.5 }}>
+              <img src={logo} alt="Logo" style={{ width: '100px', objectFit: 'contain' }} />
+              <Typography sx={{ fontSize: '16px', fontWeight: 'bold', mt: 0.5 }}>
+                CỬA HÀNG ĐIỆN TỬ
+              </Typography>
+              <Typography sx={{ fontSize: '14px', fontWeight: 'bold' }}>
+                HÓA ĐƠN BÁN HÀNG
+              </Typography>
+            </Box>
+
+            {/* Thông tin đơn hàng */}
+            <Box sx={{ mb: 1, borderBottom: '1px dashed #000', pb: 1 }}>
+              <Typography sx={{ fontSize: '12px' }}>Mã đơn: {printOrder.orderCode}</Typography>
+              <Typography sx={{ fontSize: '12px' }}>Ngày: {formatDate(printOrder.orderDate)}</Typography>
+              <Typography sx={{ fontSize: '12px' }}>KH: {printOrder.customerName}</Typography>
+              <Typography sx={{ fontSize: '12px' }}>SĐT: {printOrder.phoneNumber}</Typography>
+            </Box>
+
+            {/* Chi tiết sản phẩm - table đơn giản */}
+            <Box sx={{ mb: 1 }}>
+              <Box sx={{ display: 'flex', fontSize: '12px', fontWeight: 'bold', borderBottom: '1px solid #000', pb: 0.5, mb: 0.5 }}>
+                <Box sx={{ flex: '2' }}>Sản phẩm</Box>
+                <Box sx={{ width: '40px', textAlign: 'center' }}>SL</Box>
+                <Box sx={{ width: '80px', textAlign: 'right' }}>Giá</Box>
+              </Box>
+              {printOrder.orderDetails?.map((item, index) => (
+                <Box key={index} sx={{ mb: 0.8 }}>
+                  <Box sx={{ display: 'flex', fontSize: '12px' }}>
+                    <Box sx={{ flex: '2' }}>{item.productName}</Box>
+                    <Box sx={{ width: '40px', textAlign: 'center' }}>{item.quantity}</Box>
+                    <Box sx={{ width: '80px', textAlign: 'right' }}>{formatCurrency(item.price * item.quantity)}</Box>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+
+            {/* Tổng tiền */}
+            <Box sx={{ borderTop: '1px dashed #000', pt: 1, mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', mb: 0.4 }}>
+                <span>Tạm tính:</span>
+                <span>{formatCurrency(printOrder.orderDetails?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)}</span>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', mb: 0.4 }}>
+                <span>Giảm giá (Voucher):</span>
+                <span>{printOrder.discountByVoucher > 0 ? '-' : ''}{formatCurrency(printOrder.discountByVoucher || 0)}</span>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', mb: 0.4 }}>
+                <span>Giảm giá (Điểm):</span>
+                <span>{printOrder.discountByPoint > 0 ? '-' : ''}{formatCurrency(printOrder.discountByPoint || 0)}</span>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', borderTop: '1px solid #000', pt: 0.5, mt: 0.5 }}>
+                <span>Tổng cộng:</span>
+                <span>{formatCurrency(printOrder.totalAmount)}</span>
+              </Box>
+            </Box>
+
+            {/* Thanh toán */}
+            <Box sx={{ mb: 1, fontSize: '12px', borderBottom: '1px dashed #000', pb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.3 }}>
+                <span>Thanh toán:</span>
+                <span>{printOrder.paymentMethod}</span>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Trạng thái:</span>
+                <span>{printOrder.paymentStatus === 'Paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}</span>
+              </Box>
+            </Box>
+
+            {printOrder.note && (
+              <Box sx={{ mb: 1, fontSize: '11px', fontStyle: 'italic' }}>
+                Ghi chú: {printOrder.note}
+              </Box>
+            )}
+
+            {/* Footer */}
+            <Box sx={{ textAlign: 'center', mt: 1.5, fontSize: '12px' }}>
+              <Typography sx={{ fontSize: '13px', fontWeight: 'bold' }}>
+                Cảm ơn quý khách!
+              </Typography>
+              <Typography sx={{ fontSize: '11px', mt: 0.5 }}>
+                Hotline: 1800 1062
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      )}
+
+      {/* Print Styles */}
+      <style>
+        {`
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            .print-only, .print-only * {
+              visibility: visible;
+            }
+            .print-only {
+              position: absolute;
+              left: 0;
+              top: 0;
+              display: block !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+            @page {
+              size: 80mm auto;
+              margin: 0;
+            }
+            body {
+              background: white !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+          }
+        `}
+      </style>
     </Box>
   );
 };

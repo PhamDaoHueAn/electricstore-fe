@@ -144,7 +144,7 @@ const CategoryProducts = () => {
 
         {/* Sort Select */}
         <FormControl className={styles.sortContainer}>
-          <InputLabel>Sắp xếp theo</InputLabel>
+          <InputLabel sx={{ color: '#95d3f5ff', fontSize: '18px' }}>Sắp xếp theo</InputLabel>
           <Select
             value={`${sortBy}:${sortOrder}`}
             onChange={handleSortChange}
@@ -207,11 +207,7 @@ const CategoryProducts = () => {
                       </div>
                     )}
                   </a>
-                  <div className={styles.itemBottom}>
-                    <a href="javascript:;" className={styles.shiping} aria-label="shiping">
-                      <i className="bi bi-truck"></i>
-                    </a>
-                  </div>
+
                   <div className={styles.ratingCompare}>
                     <div className={styles.voteTxt}>
                       <i></i>
@@ -237,7 +233,7 @@ const CategoryProducts = () => {
               fontWeight: 500,
             },
             '& .MuiPaginationItem-root.Mui-selected': {
-              backgroundColor: '#e91e63',
+              backgroundColor: '#1976d2',
               color: 'white',
             }
           }}>

@@ -17,7 +17,8 @@ import CustomerManagement from './components/Admin/CustomerManagement/CustomerMa
 import EmployeeManagement from './components/Admin/EmployeeManagement/EmployeeManagement';
 import SupplierManagement from './components/Admin/SupplierMannagement/SupplierMannagement';
 import QuestionAndAnswerManagement from './components/Admin/QuestionAndAnswerManagement/QuestionAndAnswerManagement';
-import ImportManagement from './components/Admin/ImportManagement';
+import ImportManagement from './components/Admin/ImportManagement/ImportManagement';
+import StatisticsReport from './components/Admin/StatisticsReport/StatisticsReport';
 
 import Home from './components/Customer/Home';
 import { isAuthenticated, isAdmin, isAdminOrEmployee } from './services/auth';
@@ -179,6 +180,14 @@ function App() {
             element={
               <ProtectedRoute adminOrEmployee>
                 <ImportManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/statistics"
+            element={
+              <ProtectedRoute adminOrEmployee>
+                <StatisticsReport />
               </ProtectedRoute>
             }
           />
