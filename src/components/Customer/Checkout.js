@@ -43,6 +43,7 @@ const Checkout = () => {
   const [finalPrice, setFinalPrice] = useState(0);
   const [usedPoints, setUsedPoints] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   // Thông tin khách hàng
   const [fullName, setFullName] = useState('');
@@ -53,6 +54,7 @@ const Checkout = () => {
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     setIsLoggedIn(!!token);
+    setAuthChecked(true);
   }, []);
 
   // === LẤY GIỎ HÀNG KHÁCH ===
@@ -99,12 +101,14 @@ const Checkout = () => {
 
   // === TẢI DỮ LIỆU ===
   useEffect(() => {
+    if (!authChecked) return;
     const loadData = async () => {
       setLoading(true);
       setError(null);
       let items = [];
 
       if (isLoggedIn) {
+        console.log('vao IF');
         try {
           const [cartRes, profileRes] = await Promise.all([
             callApi(t => API.get('/Cart', { headers: { Authorization: `Bearer ${t}` } })),
@@ -113,7 +117,12 @@ const Checkout = () => {
 
           items = Array.isArray(cartRes?.data) ? cartRes.data : [];
           const profile = profileRes?.data || {};
-
+          if (items.length === 0) {
+            console.log('Giỏ hàng khách trống, chuyển hướng đến trang giỏ hàng.');
+            setError('Giỏ hàng trống.');
+            navigate('/cart');
+            return;
+          }
           // TỰ ĐỘNG ĐIỀN THÔNG TIN
           setFullName(profile.fullName || '');
           setPhoneNumber(profile.phone || '');
@@ -125,12 +134,8 @@ const Checkout = () => {
           items = getGuestCart();
         }
       } else {
+        console.log('vao ELSE');
         items = getGuestCart();
-        if (items.length === 0) {
-          setError('Giỏ hàng trống.');
-          navigate('/cart');
-          return;
-        }
       }
 
       setCartItems(items);
@@ -139,7 +144,7 @@ const Checkout = () => {
     };
 
     loadData();
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, authChecked, navigate]);
 
   // === TÍNH TOÁN GIÁ ===
   const calculateTotal = (items) => {
