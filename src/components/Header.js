@@ -9,6 +9,12 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import API from '../services/api';
 import styles from './Header.module.css';
 import logo from '../images/logo.png';
+import logoMobile from '../images/logo-mobile.png';
+import MenuIcon from '@mui/icons-material/Menu';
+import SearchIcon from '@mui/icons-material/Search';
+import Badge from '@mui/material/Badge';
+import ListItemText from '@mui/material/ListItemText';
+import { useMediaQuery } from '@mui/material';
 
 const GUEST_CART_KEY = 'guestCart';
 
@@ -27,6 +33,7 @@ const Header = () => {
   const [categories, setCategories] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const isMobile = useMediaQuery('(max-width:599px)');
 
   // === LẤY DANH MỤC ===
   const fetchCategories = async () => {
@@ -193,163 +200,111 @@ const Header = () => {
   };
 
   return (
-    <AppBar position="fixed" className={styles.header} sx={{ backgroundColor: '#009EE1' }}>
-      <Toolbar>
-        {/* Logo + Dropdown Danh mục */}
-        <div className={styles.logoSection}>
-          <a
-            href="/"
-            onClick={(e) => { e.preventDefault(); navigate('/'); }}
-            className={styles.logo}
-          >
-            <img
-              src={logo}
-              alt="Logo"
-              className={styles.logoImage}
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
-          </a>
+    <AppBar position="fixed" className={styles.header}>
+      <Toolbar className={styles.toolbar}>
+        <div className={styles.mainRow}>
+          {/* LEFT */}
+          <div className={styles.leftSection}>
+            <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} className={styles.logo}>
+              <img
+                src={isMobile ? logoMobile : logo}
+                alt="Điện máy XANH"
+                className={styles.logoImage}
+              />
+            </a>
 
-          <Button
-            color="inherit"
-            onClick={handleMenuOpen}
-            className={styles.categoryButton}
-            endIcon={<ExpandMoreIcon />}
-            disabled={loadingCategories}
-          >
-            Danh mục
-          </Button>
+            <Button
+              color="inherit"
+              onClick={handleMenuOpen}
+              className={styles.categoryButton}
+              startIcon={<MenuIcon />}
+            >
+              <span className={styles.categoryText}>Danh mục</span>
+            </Button>
 
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-            PaperProps={{
-              sx: { mt: 1, minWidth: 200, maxHeight: 400, overflow: 'auto' }
-            }}
-          >
-            {loadingCategories ? (
-              <MenuItem disabled><CircularProgress size={20} sx={{ mr: 1 }} /> Đang tải...</MenuItem>
-            ) : categories.length === 0 ? (
-              <MenuItem disabled>Không có danh mục</MenuItem>
-            ) : (
-              categories.map((category) => {
-                const categoryId = category.id || category.categoryId;
-                return (
-                  <MenuItem
-                    key={categoryId}
-                    onClick={() => handleCategoryClick(categoryId)}
-                    className={styles.menuItem}
-                  >
-                    {category.categoryName}
-                  </MenuItem>
-                );
-              })
-            )}
-          </Menu>
-        </div>
-
-        {/* Tìm kiếm */}
-        <div className={styles.searchContainer}>
-          <div className={styles.searchBox}>
-            <Autocomplete
-              freeSolo
-              options={suggestions.map(p => p.productName)}
-              inputValue={searchTerm}
-              onInputChange={handleSearchChange}
-              onChange={handleSearch}
-              loading={loadingSuggestions}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  placeholder="Tìm kiếm sản phẩm..."
-                  className={styles.searchInput}
-                  onKeyPress={handleSearch}
-                  size="small"
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {loadingSuggestions ? <CircularProgress color="inherit" size={20} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
+            {/* Menu dropdown */}
+            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}
+              PaperProps={{ sx: { mt: 1, minWidth: 220 } }}>
+              {loadingCategories ? (
+                <MenuItem disabled><CircularProgress size={20} /> Đang tải...</MenuItem>
+              ) : categories.length === 0 ? (
+                <MenuItem disabled>Không có danh mục</MenuItem>
+              ) : (
+                categories.map((category) => {
+                  const categoryId = category.id || category.categoryId;
+                  return (
+                    <MenuItem key={categoryId} onClick={() => handleCategoryClick(categoryId)}>
+                      {category.categoryName}
+                    </MenuItem>
+                  );
+                })
               )}
-            />
-            <Button
-              variant="contained"
-              color="#009EE1"
-              onClick={handleSearch}
-              className={styles.searchButton}
-            >
-              Tìm kiếm
-            </Button>
+            </Menu>
           </div>
-        </div>
 
-        {/* Hành động người dùng */}
-        <div className={styles.userActions}>
-          {isLoggedIn && location.pathname !== '/login' ? (
-            <>
-              {/* ← CHỈ SỬA DUY NHẤT ĐOẠN NÀY → DÙNG AVATAR THẬT */}
-              <IconButton
-                color="inherit"
-                onClick={() => navigate('/profile')}
-                className={styles.userIcon}
-              >
-                <Avatar
-                  src={userAvatar}
-                  alt={username}
-                  sx={{ width: 36, height: 36 }}
-                />
-              </IconButton>
-              {/* ← HẾT PHẦN SỬA */}
-
-              <Typography
-                variant="body1"
-                className={styles.username}
-                onClick={() => navigate('/profile')}
-                style={{ cursor: 'pointer', marginRight: '16px' }}
-              >
-                {username}
-              </Typography>
-              <Button
-                color='red'
-                variant="contained"
-                onClick={handleLogoutClick}
-                className={styles.logoutButton}
-              >
-                Đăng xuất
+          {/* CENTER - Tìm kiếm (sẽ xuống dòng trên mobile) */}
+          <div className={styles.searchContainer}>
+            <div className={styles.searchBox}>
+              <Autocomplete
+                freeSolo
+                fullWidth                       // ← Thêm dòng này
+                options={suggestions.map(p => p.productName)}
+                inputValue={searchTerm}
+                onInputChange={handleSearchChange}
+                onChange={handleSearch}
+                loading={loadingSuggestions}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Tìm kiếm sản phẩm..."
+                    variant="outlined"
+                    size="small"
+                    className={styles.searchInput}
+                    onKeyPress={handleSearch}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingSuggestions ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+              <Button variant="contained" className={styles.searchButton} onClick={handleSearch}>
+                <SearchIcon />
               </Button>
-            </>
-          ) : (
-            <Button
-              variant="contained"
-              color="#009EE1"
-              onClick={() => navigate('/login')}
-              className={styles.loginButton}
-            >
-              Đăng nhập
-            </Button>
-          )}
+            </div>
+          </div>
 
-          {/* Giỏ hàng */}
-          <Button
-            variant="contained"
-            color="#009EE1"
-            onClick={() => navigate('/cart')}
-            className={styles.cartButton}
-            startIcon={<ShoppingCartIcon />}
-
-          >
-            Giỏ hàng
-            {cartCount > 0 && (
-              <span className={styles.cartBadge}>{cartCount}</span>
+          {/* RIGHT */}
+          <div className={styles.rightSection}>
+            {isLoggedIn ? (
+              <div className={styles.userInfo}>
+                <IconButton onClick={() => navigate('/profile')} color="inherit">
+                  <Avatar src={userAvatar} alt={username} sx={{ width: 36, height: 36 }} />
+                </IconButton>
+                <Typography className={styles.username} onClick={() => navigate('/profile')}>
+                  {username}
+                </Typography>
+                <Button size="small" variant="contained" color="error" onClick={handleLogoutClick}>
+                  Thoát
+                </Button>
+              </div>
+            ) : (
+              <Button variant="outlined" color="inherit" onClick={() => navigate('/login')}>
+                Đăng nhập
+              </Button>
             )}
-          </Button>
+
+            <IconButton color="inherit" onClick={() => navigate('/cart')} className={styles.cartIcon}>
+              <Badge badgeContent={cartCount} color="error">
+                <ShoppingCartIcon />
+              </Badge>
+            </IconButton>
+          </div>
         </div>
       </Toolbar>
     </AppBar>

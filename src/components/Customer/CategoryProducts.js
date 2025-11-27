@@ -144,7 +144,7 @@ const CategoryProducts = () => {
 
         {/* Sort Select */}
         <FormControl className={styles.sortContainer}>
-          <InputLabel sx={{ color: '#95d3f5ff', fontSize: '18px' }}>Sắp xếp theo</InputLabel>
+          <InputLabel sx={{ color: '#8087ecff', fontSize: '18px' }}>Sắp xếp theo</InputLabel>
           <Select
             value={`${sortBy}:${sortOrder}`}
             onChange={handleSortChange}

@@ -151,17 +151,22 @@ const Home = () => {
   };
 
   const categorySliderSettings = {
-    dots: true,
-    infinite: true,
+    dots: false,
+    infinite: categories.length > 6,
     speed: 500,
     slidesToShow: 6,
-    slidesToScroll: 6,
+    slidesToScroll: 3,
+    swipeToSlide: true,
+    touchThreshold: 15,
+    arrows: true,
+    autoplay: false,
     responsive: [
-      { breakpoint: 1024, settings: { slidesToShow: 4, slidesToScroll: 4 } },
-      { breakpoint: 768, settings: { slidesToShow: 3, slidesToScroll: 3 } },
-      { breakpoint: 480, settings: { slidesToShow: 2, slidesToScroll: 2 } }
-    ],
-    arrows: false,
+      { breakpoint: 1400, settings: { slidesToShow: 6, slidesToScroll: 3 } },
+      { breakpoint: 1200, settings: { slidesToShow: 5, slidesToScroll: 3 } },
+      { breakpoint: 992, settings: { slidesToShow: 4, slidesToScroll: 2 } },
+      { breakpoint: 768, settings: { slidesToShow: 3.5, slidesToScroll: 2 } },
+      { breakpoint: 480, settings: { slidesToShow: 2.8, slidesToScroll: 2 } }
+    ]
   };
 
   if (loading) {
@@ -211,38 +216,122 @@ const Home = () => {
 
         <FlashSale />
 
-        {/* Category Carousel */}
+        {/* === THAY TOÀN BỘ PHẦN CATEGORY CAROUSEL BẰNG ĐOẠN NÀY === */}
+        {/* === CATEGORY: PC + MOBILE HOÀN HẢO === */}
         <Container maxWidth="lg">
-          <section className={styles.mainMenuCategories}>
-            <div className={styles.listCates}>
-              <Slider {...categorySliderSettings}>
+          {/* ============ PHIÊN BẢN PC & TABLET ============ */}
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+            <section className={styles.mainMenuCategories}>
+              <div className={styles.listCates}>
+                <Slider {...categorySliderSettings}>
+                  {categories.map((category) => {
+                    const categoryId = category.id || category.categoryId;
+                    return (
+                      <div
+                        key={categoryId}
+                        className={`${styles.cateItem} ${selectedCategory === categoryId ? styles.selected : ''}`}
+                      >
+                        <a
+                          href={`/category/${categoryId}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleCategoryImageClick(categoryId);
+                          }}
+                        >
+                          <span>{category.discount || 'HOT'}</span>
+                          <img
+                            src={category.imageUrl || '/images/category-placeholder.jpg'}
+                            alt={category.categoryName}
+                            onError={(e) => { e.target.src = '/images/category-placeholder.jpg'; }}
+                          />
+                          <p>{category.categoryName}</p>
+                        </a>
+                      </div>
+                    );
+                  })}
+                </Slider>
+              </div>
+            </section>
+          </Box>
+
+          {/* ============ PHIÊN BẢN MOBILE: 1 HÀNG DUY NHẤT ============ */}
+          <Box sx={{ display: { xs: 'block', md: 'none' }, mt: 2 }}>
+            <Box className={styles.mobileCategoryWrapper}>
+              <Slider
+                dots={false}
+                infinite={false}
+                speed={500}
+                slidesToShow={1}
+                slidesToScroll={1}
+                variableWidth={true}
+                arrows={false}
+                swipeToSlide={true}
+                touchThreshold={10}
+                className={styles.mobileCategorySlider}
+              >
                 {categories.map((category) => {
                   const categoryId = category.id || category.categoryId;
                   return (
-                    <div key={categoryId} className={`${styles.cateItem} ${selectedCategory === categoryId ? styles.selected : ''}`}>
-                      <a
-                        href={`/category/${categoryId}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCategoryImageClick(categoryId);
-                        }}
+                    <Box key={categoryId} sx={{ width: 100, px: 0.5 }}>
+                      <Box
+                        className={`${styles.mobileCateItem} ${selectedCategory === categoryId ? styles.mobileCateSelected : ''}`}
+                        onClick={() => handleCategoryImageClick(categoryId)}
+                        sx={{ textAlign: 'center' }}
                       >
-                        <span>{category.discount || 'HOT'}</span>
-                        <img
-                          src={category.imageUrl || '/images/category-placeholder.jpg'}
-                          alt={category.categoryName}
-                          width="47"
-                          height="47"
-                          onError={(e) => { e.target.src = '/images/category-placeholder.jpg'; }}
-                        />
-                        <p>{category.categoryName}</p>
-                      </a>
-                    </div>
+                        <Box sx={{ position: 'relative', mb: 0.5 }}>
+                          <img
+                            src={category.imageUrl || '/images/category-placeholder.jpg'}
+                            alt={category.categoryName}
+                            style={{
+                              width: 64,
+                              height: 64,
+                              objectFit: 'contain',
+                              borderRadius: 12,
+                              background: 'white',
+                              padding: 8,
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            }}
+                            onError={(e) => (e.target.src = '/images/category-placeholder.jpg')}
+                          />
+                          {category.discount && (
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                top: 4,
+                                left: 4,
+                                background: '#e91e63',
+                                color: 'white',
+                                fontSize: '0.65rem',
+                                fontWeight: 'bold',
+                                padding: '1px 5px',
+                                borderRadius: '4px',
+                              }}
+                            >
+                              {category.discount}
+                            </Box>
+                          )}
+                        </Box>
+
+                        <Typography
+                          sx={{
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            color: '#333',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: '100%',
+                          }}
+                        >
+                          {category.categoryName}
+                        </Typography>
+                      </Box>
+                    </Box>
                   );
                 })}
               </Slider>
-            </div>
-          </section>
+            </Box>
+          </Box>
         </Container>
 
         {/* Product Grid + Pagination */}
@@ -303,7 +392,7 @@ const Home = () => {
                       <div className={styles.ratingCompare}>
                         <div className={styles.voteTxt}>
                           <i></i>
-                          <b>{product.averageRating || product.AverageRating || 0}</b>
+                          <b>{product.averageRating || 0}</b>
                         </div>
                         <span className={styles.stockCount}>• Tồn kho {product.stockQuantity?.toLocaleString('vi-VN') || 0}</span>
                       </div>

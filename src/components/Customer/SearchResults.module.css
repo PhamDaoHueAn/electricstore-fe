@@ -1,5 +1,8 @@
+/* src/components/Customer/SearchResults.module.css */
+/* ĐÃ TỐI ƯU RESPONSIVE - 2 SẢN PHẨM/HÀNG TRÊN ĐIỆN THOẠI */
+
 .container {
-  padding: 24px;
+  padding: 16px;
   background-color: #f5f5f5;
   min-height: 100vh;
 }
@@ -8,21 +11,25 @@
   color: #0560e7;
   font-weight: bold;
   margin-bottom: 16px;
+  font-size: 1.8rem;
+  text-align: center;
 }
 
 .sortContainer {
   margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
 }
 
 .sortSelect {
-  min-width: 200px;
+  min-width: 220px;
   background-color: white;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 .noResults {
   text-align: center;
-  padding: 50px;
+  padding: 60px 20px;
   color: #d32f2f;
 }
 
@@ -30,43 +37,54 @@
   margin-top: 16px;
 }
 
+/* GRID RESPONSIVE - 2 SP/HÀNG TRÊN MOBILE */
 .listproduct {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px 16px;
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .item {
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   overflow: hidden;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .item:hover {
-  transform: translateY(-4px);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
 }
 
 .mainContain {
   display: block;
   text-decoration: none;
   color: inherit;
-  padding: 16px;
+  padding: 12px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .itemLabel {
   display: flex;
   gap: 8px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .lnNew, .lbTragop {
   font-size: 12px;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-weight: bold;
 }
 
 .lnNew {
@@ -80,73 +98,68 @@
 }
 
 .itemImg {
-  width: 100%;
-  height: 200px;
+  height: 180px;
   overflow: hidden;
+  background: #fdfdfd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .thumb {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  transition: transform 0.4s ease;
 }
 
-.resultLabel {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #d32f2f;
-  margin: 8px 0;
-}
-
-.resultLabel img {
-  vertical-align: middle;
+.item:hover .thumb {
+  transform: scale(1.08);
 }
 
 .mainContain h3 {
-  font-size: 16px;
-  font-weight: 500;
-  margin: 8px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 10px 0;
   line-height: 1.4;
-}
-
-.newModel {
-  font-size: 12px;
-  color: #0560e7;
-  margin-left: 8px;
+  color: #333;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .itemCompare {
   display: flex;
   gap: 8px;
-  font-size: 12px;
+  font-size: 0.8rem;
   color: #666;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
 }
 
 .itemTxtOnline {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: 0.8rem;
   color: #0288d1;
-  margin-bottom: 8px;
+  margin: 6px 0;
 }
 
 .itemTxtOnline i {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background: url('../../images/online-icon.png') no-repeat center;
-  background-size: contain;
+  width: 14px;
+  height: 14px;
+  background: #0288d1;
+  border-radius: 50%;
 }
 
 .price {
-  font-size: 18px;
+  font-size: 1.15rem;
   font-weight: bold;
   color: #d32f2f;
-  margin-bottom: 8px;
+  margin: 8px 0;
 }
 
 .boxP {
@@ -157,64 +170,38 @@
 }
 
 .priceOld {
-  font-size: 14px;
+  font-size: 0.9rem;
   color: #999;
   text-decoration: line-through;
 }
 
 .percent {
-  font-size: 12px;
-  color: #d32f2f;
-}
-
-.itemGift {
-  font-size: 12px;
-  color: #333;
-}
-
-.itemGift b {
-  color: #d32f2f;
-}
-
-.itemBottom {
-  display: flex;
-  justify-content: center;
-  padding: 8px;
-}
-
-.shiping {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background-color: #e3f2fd;
-  border-radius: 50%;
-  text-decoration: none;
-}
-
-.shiping i {
-  font-size: 18px;
-  color: #0560e7;
+  background: #d32f2f;
+  color: white;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: bold;
 }
 
 .ratingCompare {
+  margin-top: auto;
+  padding: 10px 12px;
+  border-top: 1px dashed #eee;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
-  border-top: 1px solid #eee;
+  font-size: 0.85rem;
 }
 
 .voteTxt {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  color: #f57c00;
 }
 
 .voteTxt i {
-  display: inline-block;
   width: 16px;
   height: 16px;
   background: url('../../images/star-icon.png') no-repeat center;
@@ -223,24 +210,44 @@
 
 .voteTxt b {
   color: #d32f2f;
+  font-weight: bold;
 }
 
 .stockCount {
-  font-size: 12px;
   color: #666;
+  font-size: 0.8rem;
 }
 
-.itemSs {
-  font-size: 12px;
-  color: #0288d1;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+/* RESPONSIVE HOÀN HẢO */
+@media (max-width: 1400px) {
+  .listproduct { grid-template-columns: repeat(4, 1fr); }
 }
 
-.itemSs i {
-  font-size: 14px;
+@media (max-width: 1024px) {
+  .listproduct { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .listproduct {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .itemImg { height: 160px; }
+  .mainContain h3 { font-size: 0.92rem; }
+  .price { font-size: 1.1rem; }
+}
+
+@media (max-width: 480px) {
+  .listproduct {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .container { padding: 12px; }
+  .title { font-size: 1.5rem; }
+  .itemImg { height: 140px; }
+  .mainContain { padding: 10px; }
+  .price { font-size: 1.05rem; }
+  .percent { font-size: 0.75rem; }
 }
 
 .pagination {
@@ -251,10 +258,11 @@
 
 .pagination .MuiPaginationItem-root {
   color: #0560e7;
+  font-weight: 500;
 }
 
 .pagination .Mui-selected {
-  background-color: #0560e7;
+  background-color: #0560e7 !important;
   color: white;
 }
 

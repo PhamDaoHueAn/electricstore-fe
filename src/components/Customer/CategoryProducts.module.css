@@ -1,3 +1,6 @@
+/* src/components/Customer/CategoryProducts.module.css */
+/* RESPONSIVE HOÀN HẢO - 2 SẢN PHẨM/HÀNG TRÊN MOBILE - ĐẸP NHƯ TRANG CHỦ */
+
 .container {
   background-color: #f5f5f5;
   min-height: 100vh;
@@ -15,14 +18,9 @@
 .container::before {
   content: '';
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('../../images/sale.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: inherit;
+  background-attachment: fixed;
   z-index: -1;
 }
 
@@ -31,296 +29,233 @@
   font-weight: bold;
   margin-bottom: 16px;
   padding-top: 24px;
+  font-size: 2rem;
+  text-align: center;
 }
 
+/* === THƯƠNG HIỆU CAROUSEL === */
 .brandMenu {
   margin: 20px 0;
   background-color: white;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  padding: 10px 0;
+  padding: 16px 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
 
-.listBrands {
-  padding: 8px 0;
+.listBrands :global(.slick-slide) {
+  padding: 0 8px;
 }
 
 .brandItem {
-  padding: 8px;
   text-align: center;
+  padding: 12px 8px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  cursor: pointer;
 }
 
-.brandItem a {
-  display: inline-block;
-  text-decoration: none;
-  color: #333;
-  border: #666;
-}
-
-.brandItem img {
-  width: 47px;
-  height: 47px;
-  object-fit: contain;
-  margin-bottom: 8px;
-}
-
-.brandItem p {
-  font-size: 14px;
-  margin: 0;
+.brandItem:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
 .brandItem.selected {
-  background-color: #e3f2fd;
-  border-radius: 8px;
+  background: #e3f2fd;
+  border: 3px solid #1976d2;
 }
 
+.brandItem img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  margin: 0 auto 8px;
+  background: white;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.brandItem p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === SẮP XẾP === */
 .sortContainer {
-  margin-bottom: 24px;
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
 }
 
 .sortSelect {
-  min-width: 200px;
-  height: 40px;
-  background-color: white;
-  border-radius: 20px;
-  margin-top: 10px;
+  min-width: 240px;
+  height: 48px;
+  background-color: white !important;
+  border-radius: 24px !important;
+  font-size: 1rem;
 }
 
-.noResults {
-  text-align: center;
-  padding: 50px;
-  color: #d32f2f;
-}
-
+/* === GRID SẢN PHẨM - 2 SP/HÀNG TRÊN MOBILE === */
 .productGrid {
   margin-top: 16px;
 }
 
 .listproduct {
   display: grid;
-  grid-auto-rows: minmax(min-content, max-content);
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px 16px;
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-@media (max-width: 1200px) {
-  .listproduct {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .listproduct {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .listproduct {
-    grid-template-columns: 1fr;
-  }
-}
-
 .item {
-  position: relative;
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s;
-  margin-bottom: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
 }
 
 .mainContain {
-  display: block;
+  padding: 12px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
   text-decoration: none;
   color: inherit;
-  padding: 16px;
 }
 
 .itemLabel {
   position: absolute;
-  top: 5px;
-  left: 5px;
+  top: 8px;
+  left: 8px;
   z-index: 2;
 }
 
 .itemLabel span {
-  display: block;
   background: #e91e63;
   color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
   font-weight: bold;
-  margin-bottom: 2px;
 }
 
 .lnNew {
-  background: #e91e63 !important;
-}
-
-.lbTragop {
-  background: #4caf50 !important;
+  background: #ff5722 !important;
 }
 
 .itemImg {
-  position: relative;
-  height: 200px;
-  overflow: hidden;
+  height: 190px;
+  background: #fdfdfd;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .thumb {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: transform 0.3s;
+  transition: transform 0.4s ease;
 }
 
 .item:hover .thumb {
-  transform: scale(1.05);
-}
-
-.resultLabel {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #d32f2f;
-  margin: 8px 0;
-}
-
-.resultLabel img {
-  vertical-align: middle;
+  transform: scale(1.08);
 }
 
 .mainContain h3 {
-  font-size: 16px;
-  font-weight: 500;
-  margin: 8px 0;
+  margin: 10px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
   line-height: 1.4;
-}
-
-.newModel {
-  font-size: 12px;
-  color: #0560e7;
-  margin-left: 8px;
-}
-
-.itemCompare {
-  display: flex;
-  gap: 8px;
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 8px;
+  color: #333;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .itemTxtOnline {
+  font-size: 0.8rem;
+  color: #e91e63;
+  margin: 6px 0;
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
-  color: #e91e63;
-  margin-bottom: 8px;
 }
 
 .itemTxtOnline i {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   background: #e91e63;
   border-radius: 50%;
 }
 
 .price {
-  font-size: 18px;
+  font-size: 1.15rem;
   font-weight: bold;
   color: #d32f2f;
-  margin-bottom: 8px;
+  margin: 8px 0;
 }
 
 .boxP {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
 }
 
 .priceOld {
-  font-size: 14px;
+  font-size: 0.9rem;
   color: #999;
   text-decoration: line-through;
 }
 
 .percent {
-  background: #e91e63;
+  background: #d32f2f;
   color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 7px;
+  border-radius: 6px;
   font-size: 0.8rem;
   font-weight: bold;
 }
 
-.itemGift {
-  font-size: 12px;
-  color: #333;
-}
-
-.itemGift b {
-  color: #d32f2f;
-}
-
-.itemBottom {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  z-index: 2;
-}
-
-.shiping {
-  display: block;
-  width: 24px;
-  height: 24px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-}
-
-.shiping i {
-  font-size: 0.8rem;
-  color: #666;
-}
-
 .ratingCompare {
+  margin-top: auto;
+  padding: 10px 12px;
+  border-top: 1px dashed #eee;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
-  border-top: 1px solid #eee;
+  font-size: 0.85rem;
 }
 
 .voteTxt {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  color: #f57c00;
 }
 
 .voteTxt i {
-  display: inline-block;
   width: 16px;
   height: 16px;
   background: url('../../images/star-icon.png') no-repeat center;
@@ -329,41 +264,66 @@
 
 .voteTxt b {
   color: #d32f2f;
+  font-weight: bold;
 }
 
 .stockCount {
-  font-size: 12px;
   color: #666;
+  font-size: 0.8rem;
 }
 
-.itemSs {
-  font-size: 12px;
-  color: #0288d1;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+/* === RESPONSIVE HOÀN HẢO === */
+@media (max-width: 1400px) {
+  .listproduct { grid-template-columns: repeat(4, 1fr); }
 }
 
-.itemSs:hover {
-  color: #0560e7;
+@media (max-width: 1024px) {
+  .listproduct { grid-template-columns: repeat(3, 1fr); }
 }
 
-.pagination {
+@media (max-width: 768px) {
+  .listproduct {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .itemImg { height: 160px; }
+  .mainContain h3 { font-size: 0.92rem; }
+  .price { font-size: 1.1rem; }
+}
+
+@media (max-width: 480px) {
+  .listproduct {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .title { font-size: 1.6rem; padding-top: 16px; }
+  .brandMenu { margin: 16px 0; padding: 12px 4px; }
+  .brandItem img { width: 60px; height: 60px; }
+  .brandItem p { font-size: 0.85rem; }
+  .itemImg { height: 140px; }
+  .mainContain { padding: 10px; }
+  .price { font-size: 1.05rem; }
+  .percent { font-size: 0.75rem; }
+}
+
+/* Pagination đẹp */
+.MuiPagination-root {
   margin-top: 32px;
   display: flex;
   justify-content: center;
 }
 
-.pagination .MuiPaginationItem-root {
-  color: #0560e7;
+.MuiPaginationItem-root {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #666 !important;
+  font-weight: 500;
 }
 
-.pagination .Mui-selected {
-  background-color: #0560e7;
-  color: white;
+.MuiPaginationItem-root.Mui-selected {
+  background-color: #1976d2 !important;
+  color: white !important;
 }
 
-.pagination .MuiPaginationItem-root:hover {
-  background-color: #e3f2fd;
+.MuiPaginationItem-root:hover {
+  background-color: #e3f2fd !important;
 }

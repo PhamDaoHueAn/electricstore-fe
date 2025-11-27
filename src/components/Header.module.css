@@ -1,167 +1,171 @@
+/* src/components/Customer/Header.module.css */
+/* ĐÃ FIX: ô tìm kiếm nhỏ + mobile căn đều 4 phần trên 1 hàng */
+
 .header {
-  background-color: #009EE1 !important;
+  background: linear-gradient(135deg, #009EE1 0%, #0077b6 100%) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+  z-index: 1200;
 }
 
-.logo {
-  text-decoration: none;
-  margin-right: 16px;
-  flex: 0 0 auto;
+.toolbar {
+  min-height: 64px !important;
+  padding: 0 12px !important;
+}
+
+/* Hàng chính */
+.mainRow {
   display: flex;
   align-items: center;
+  width: 100%;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+/* LEFT */
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .logoImage {
-  height: 50px;
-  width: auto;
+  height: 48px;
   object-fit: contain;
-  cursor: pointer;
-}
-
-.logoSection {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  transition: height 0.3s ease;
 }
 
 .categoryButton {
-  font-weight: 500;
-  text-transform: none;
   color: white !important;
-  font-size: large;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  padding: 6px 10px !important;
+  font-size: 0.95rem;
 }
 
-.categoryButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.categoryText {
+  /* Ẩn chữ trên mobile */
 }
 
-.menuItem {
-  font-size: 14px;
-}
-
-.menuItem:hover {
-  background-color: #f5f5f5;
-}
-
+/* CENTER - Tìm kiếm */
 .searchContainer {
   flex: 1;
+  max-width: 600px;
+  min-width: 260px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  /* Ngăn flex co nhỏ quá mức */
 }
 
 .searchBox {
   display: flex;
-  gap: 8px;
   width: 100%;
-  max-width: 600px;
-  min-width: 400px;
-  /* Đảm bảo kích thước tối thiểu */
+  background: white;
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  height: 44px;
+  margin-bottom: 5px;
 }
 
+/* QUAN TRỌNG: làm ô input chiếm hết chỗ */
 .searchInput {
-  flex: 1;
-  background-color: white;
-  min-width: 400px !important;
-  max-width: 600px !important;
-  width: 100% !important;
-  border-radius: 20px;
-  margin-top: 10px;
-  height: 40px;
+  flex: 1 !important;
 }
-
-.searchButton {
-  height: 40px;
-  margin: 10px;
-  flex: 0 0 auto;
-  /* Không mở rộng */
+.searchInput :global(.MuiOutlinedInput-root) {
+  height: 100% !important;
+  border-radius: 30px !important;
 }
-
 .searchInput :global(.MuiOutlinedInput-notchedOutline) {
   border: none !important;
 }
-
-.searchInput :global(.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline) {
-  border: none !important;
-  box-shadow: none !important;
+.searchInput :global(.MuiInputBase-input) {
+  padding: 12px 16px !important;
+  font-size: 15px;
 }
 
-.searchInput :global(.MuiOutlinedInput-input) {
-  padding: 10px 14px !important;
-  font-size: 16px;
+.searchButton {
+  background: #4583e6 !important;
+  color: white !important;
+  min-width: 56px !important;
+  border-radius: 0 30px 30px 0 !important;
+  padding: 0 16px !important;
+}
+.searchButton:hover {
+  background: #d50000 !important;
 }
 
-.searchInput :global(.MuiAutocomplete-root) {
-  flex: 1;
-  width: 100% !important;
-  min-width: 400px !important;
+/* RIGHT */
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-.searchInput :global(.MuiOutlinedInput-root) {
-  height: 40px !important;
-  width: 100% !important;
-  min-width: 400px !important;
-}
-
-.searchInput :global(.MuiAutocomplete-popper) {
-  z-index: 1300 !important;
-  /* Đảm bảo dropdown hiển thị trên AppBar */
-}
-
-.userActions {
+.userInfo {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 0 0 auto;
-}
-
-.userIcon {
-  margin-right: 8px;
 }
 
 .username {
   color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
 }
 
-.loginButton,
-.cartButton {
-  height: 40px;
-}
-
-.logoutButton {
-  background-color: #ff1744;
+.cartIcon :global(.MuiBadge-badge) {
+  background: #ff1744;
   color: white;
-  height: 40px;
+  font-weight: bold;
+  font-size: 11px;
 }
 
-.cartBadge {
-  background-color: #ff1744;
-  color: white;
-  border-radius: 50%;
-  padding: 2px 8px;
-  margin-left: 8px;
-  font-size: 12px;
+/* ==================== RESPONSIVE ==================== */
+@media (min-width: 600px) {
+  .mainRow {
+    flex-wrap: nowrap;
+    gap: 16px;
+  }
+  .categoryText {
+    display: inline;
+  }
+  .toolbar {
+    padding: 0 16px !important;
+  }
 }
 
-/* Responsive cho màn hình nhỏ */
-@media (max-width: 600px) {
+@media (max-width: 599px) {
+  /* Mobile: 4 phần trên cùng 1 hàng, tìm kiếm xuống dưới */
+  .mainRow {
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* Tìm kiếm xuống hàng 2 */
+  .searchContainer {
+    order: 3;
+    flex: none;
+    width: 100%;
+    max-width: none;
+    margin-top: 8px;
+  }
+
   .searchBox {
-    min-width: 200px;
-    /* Giảm kích thước tối thiểu trên mobile */
-    max-width: 100%;
+    border-radius: 12px;
+    height: 46px;
+  }
+  .searchButton {
+    border-radius: 0 12px 12px 0 !important;
   }
 
-  .searchInput {
-    min-width: 200px !important;
-    max-width: 100% !important;
-  }
+  /* Ẩn chữ Danh mục */
+  .categoryText { display: none; }
 
-  .searchInput :global(.MuiAutocomplete-root) {
-    min-width: 200px !important;
-  }
-
-  .searchInput :global(.MuiOutlinedInput-root) {
-    min-width: 200px !important;
-  }
+  .logoImage { height: 40px; }
+  .username { font-size: 0.85rem; max-width: 80px; }
 }
