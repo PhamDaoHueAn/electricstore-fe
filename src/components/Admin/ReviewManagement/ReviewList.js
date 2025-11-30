@@ -180,7 +180,7 @@ const ReviewList = () => {
                   <TableCell>{review.reviewId}</TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="bold">
-                      ID: {review.productId}
+                      ID: {review.productName}
                     </Typography>
                   </TableCell>
                   <TableCell>

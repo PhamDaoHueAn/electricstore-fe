@@ -26,6 +26,7 @@ const Header = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [cartCount, setCartCount] = useState(0);
   const [username, setUsername] = useState('');
+  const [rolename, setRolename] = useState('');
   const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg'); // ← THÊM STATE CHO AVATAR
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
@@ -77,6 +78,7 @@ const Header = () => {
     try {
       const response = await API.get('/Auth/get-my-profile');
       setUsername(response.data.fullName || 'User');
+      setRolename(response.data.roleName || 'User');
       setUserAvatar(response.data.imageUrl || '/images/default-avatar.jpg'); // ← LẤY AVATAR THẬT
     } catch (error) {
       console.error('Lỗi lấy profile:', error);
@@ -283,12 +285,30 @@ const Header = () => {
           <div className={styles.rightSection}>
             {isLoggedIn ? (
               <div className={styles.userInfo}>
-                <IconButton onClick={() => navigate('/profile')} color="inherit">
-                  <Avatar src={userAvatar} alt={username} sx={{ width: 36, height: 36 }} />
-                </IconButton>
-                <Typography className={styles.username} onClick={() => navigate('/profile')}>
-                  {username}
-                </Typography>
+
+
+                {
+                  rolename === 'Customer' ? (
+                    <>
+                      <IconButton onClick={() => navigate('/profile')} color="inherit">
+                        <Avatar src={userAvatar} alt={username} sx={{ width: 36, height: 36 }} />
+                      </IconButton>
+                      <Typography className={styles.username} onClick={() => navigate('/profile')}>
+                        {username}
+                      </Typography>
+                    </>
+                  ) : (
+                    <>
+                      <IconButton onClick={() => navigate('/admin/profile')} color="inherit">
+                        <Avatar src={userAvatar} alt={username} sx={{ width: 36, height: 36 }} />
+                      </IconButton>
+                      <Typography className={styles.username} onClick={() => navigate('/admin/profile')}>
+                        {username}
+                      </Typography>
+                    </>
+                  )
+                }
+
                 <Button size="small" variant="contained" color="error" onClick={handleLogoutClick}>
                   Thoát
                 </Button>
