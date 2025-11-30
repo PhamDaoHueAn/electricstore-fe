@@ -1,0 +1,24 @@
+name: React Deployment
+
+on:
+  push:
+    branches: [production]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy using ssh
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: 22
+        script: |
+          cd source_fe/electricstore-fe
+          git fetch origin
+          git checkout production
+          git pull
+          docker compose up -d --build --no-deps react_app
+          

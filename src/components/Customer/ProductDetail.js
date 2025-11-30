@@ -305,11 +305,11 @@ const ProductDetail = () => {
           Quay lại
         </Button>
 
-        <Grid container spacing={4}>
+        <div className={styles.twoColumn}>
           {/* HÌNH ẢNH */}
 
-          <Grid item xs={12} md={6}>
-            <Paper elevation={2}>
+          <div className={styles.leftCol}>
+            <Paper elevation={2} sx={{ height: '100%' }}>
               <Slider
                 ref={sliderRef}
                 dots={false}
@@ -348,11 +348,11 @@ const ProductDetail = () => {
                 ))}
               </Box>
             </Paper>
-          </Grid>
+          </div>
 
           {/* THÔNG TIN */}
-          <Grid item xs={12} md={6}>
-            <Typography variant="h4" gutterBottom>{productName}</Typography>
+          <div className={styles.rightCol}>
+            <Typography variant="h4" gutterBottom className={styles.productTitle}>{productName}</Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Rating value={averageRating} readOnly precision={0.1} size="small" />
@@ -360,27 +360,31 @@ const ProductDetail = () => {
                 ({averageRating.toFixed(1)} • {reviews.length} đánh giá)
               </Typography>
             </Box>
-
             <Typography variant="h5" className={styles.price} gutterBottom>
               {sellPrice.toLocaleString('vi-VN')}₫
             </Typography>
 
+
             {originalPrice > sellPrice && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography className={styles.originalPrice}>
                   {originalPrice.toLocaleString('vi-VN')}₫
                 </Typography>
                 <Typography className={styles.discount}>-{discountPercent}%</Typography>
               </Box>
             )}
+            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              Tồn kho: {stockQuantity}
+            </Typography>
 
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+
+            <Box className={styles.actionButtons} sx={{ mb: 3 }}>
               <Button
                 variant="contained"
                 startIcon={<AddShoppingCartIcon />}
                 onClick={handleAddToCart}
                 size="large"
-                fullWidth
+                className={styles.btnPrimary}
               >
                 Thêm vào giỏ
               </Button>
@@ -389,8 +393,7 @@ const ProductDetail = () => {
                 startIcon={<ShoppingCartCheckoutIcon />}
                 onClick={handleBuyNow}
                 size="large"
-                fullWidth
-                sx={{ backgroundColor: '#d32f2f', '&:hover': { bgcolor: '#b71c1c' } }}
+                className={styles.btnSecondary}
               >
                 Mua ngay
               </Button>
@@ -398,62 +401,38 @@ const ProductDetail = () => {
 
 
 
-            {/* THÔNG SỐ KỸ THUẬT */}
-            <Box sx={{ mt: 5 }}>
-              <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
-                Thông số kỹ thuật
-              </Typography>
-              <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                <Box sx={{ maxHeight: 560, overflow: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <tbody>
-                      {descriptionPoints.length > 0 ? (
-                        descriptionPoints.map((point, index) => {
-                          // Tách key : value
-                          const hasColon = point.includes(':');
-                          const label = hasColon ? point.split(':')[0].trim() : point;
-                          const value = hasColon ? point.split(':').slice(1).join(':').trim() : '';
+            {/* THÔNG SỐ KỸ THUẬT (moved below columns) */}
+          </div>
+        </div>
 
-                          return (
-                            <tr key={index} style={{
-                              backgroundColor: index % 2 === 0 ? '#fdfdfd' : '#ffffff',
-                              borderBottom: '1px solid #eee'
-                            }}>
-                              <td style={{
-                                padding: '14px 16px',
-                                fontWeight: 'bold',
-                                color: '#333',
-                                width: '45%',
-                                verticalAlign: 'top',
-                                fontSize: '0.95rem'
-                              }}>
-                                {label}
-                              </td>
-                              <td style={{
-                                padding: '14px 16px',
-                                color: '#555',
-                                verticalAlign: 'top',
-                                fontSize: '0.95rem'
-                              }}>
-                                {value || '-'}
-                              </td>
-                            </tr>
-                          );
-                        })
-                      ) : (
-                        <tr>
-                          <td colSpan={2} style={{ padding: '30px', textAlign: 'center', color: '#999' }}>
-                            Không có thông tin mô tả.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </Box>
-              </Paper>
+        {/* THÔNG SỐ KỸ THUẬT - full width, 2 columns */}
+        <Box sx={{ mt: 5 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
+            Thông số kỹ thuật
+          </Typography>
+          <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+            <Box sx={{ maxHeight: 560, overflow: 'auto', p: 1 }}>
+              {descriptionPoints.length > 0 ? (
+                <div className={styles.specsGrid}>
+                  {descriptionPoints.map((point, index) => {
+                    const hasColon = point.includes(':');
+                    const label = hasColon ? point.split(':')[0].trim() : point;
+                    const value = hasColon ? point.split(':').slice(1).join(':').trim() : '';
+
+                    return (
+                      <div key={index} className={styles.specItem}>
+                        <div className={styles.specLabel}>{label}</div>
+                        <div className={styles.specValue}>{value || '-'}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <Box sx={{ p: 4, textAlign: 'center', color: '#999' }}>Không có thông tin mô tả.</Box>
+              )}
             </Box>
-          </Grid>
-        </Grid>
+          </Paper>
+        </Box>
 
         {/* ĐÁNH GIÁ SẢN PHẨM */}
         <Box sx={{ mt: 8 }}>
@@ -471,7 +450,7 @@ const ProductDetail = () => {
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 Chưa có đánh giá nào cho sản phẩm này
               </Typography>
-              <Button variant="contained" color="primary" startIcon={<EditIcon />} onClick={handleOpenReviewModal}>
+              <Button sx={{ fontWeight: 'bold' }} variant="contained" color="primary" startIcon={<EditIcon />} onClick={handleOpenReviewModal}>
                 Viết đánh giá đầu tiên
               </Button>
             </Paper>
@@ -551,31 +530,38 @@ const ProductDetail = () => {
 
         {/* SẢN PHẨM LIÊN QUAN */}
         <Box sx={{ mt: 6 }}>
-          <Typography variant="h5" gutterBottom>Sản phẩm liên quan</Typography>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#d32f2f' }}>Sản phẩm liên quan</Typography>
           {loadingRelated ? (
             <Typography>Đang tải...</Typography>
           ) : relatedProducts.length === 0 ? (
             <Typography color="text.secondary">Không có sản phẩm liên quan.</Typography>
           ) : (
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
               {relatedProducts.map((p) => (
-                <Grid item xs={6} sm={4} md={3} key={p.productId}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={p.productId}>
                   <Card
                     onClick={() => navigate(`/product-detail/${p.productId}`)}
-                    sx={{ cursor: 'pointer', height: '100%' }}
+                    className={styles.relatedCard}
+                    sx={{ cursor: 'pointer', height: '100%', display: 'flex', flexDirection: 'column' }}
                   >
                     <CardMedia
                       component="img"
-                      height="140"
-                      image={getImageUrl(p.mainImage)}
+                      height="100"
+                      className={styles.relatedCardMedia}
+                      src={getImageUrl(p.mainImage) || '/placeholder-product.jpg'}
                       alt={p.productName}
                       onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                      sx={{ objectFit: 'contain', backgroundColor: '#fff' }}
                     />
-                    <CardContent>
-                      <Typography variant="body2" noWrap>{p.productName}</Typography>
-                      <Typography variant="h6" color="primary">
-                        {p.sellPrice.toLocaleString('vi-VN')}₫
+                    <CardContent className={styles.relatedCardContent}>
+                      <Typography variant="body2" title={p.productName} sx={{ flexGrow: 1, mb: 1, color: '#333', fontWeight: 'bold' }}>
+                        {p.productName}
                       </Typography>
+                      <div style={{ marginTop: 'auto' }}>
+                        <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
+                          {p.sellPrice.toLocaleString('vi-VN')}₫
+                        </Typography>
+                      </div>
                     </CardContent>
                   </Card>
                 </Grid>
@@ -649,7 +635,7 @@ const ProductDetail = () => {
           </Box>
         </Modal>
       </Box>
-    </Container>
+    </Container >
   );
 };
 

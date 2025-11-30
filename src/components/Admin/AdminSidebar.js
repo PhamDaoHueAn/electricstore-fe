@@ -37,6 +37,7 @@ const AdminSidebar = ({ open = true }) => {
     { text: 'Quản lý Nhập hàng', path: '/admin/imports', icon: <LocalShipping />, color: '#ffffffff' },
     { text: 'Báo cáo Thống kê', path: '/admin/statistics', icon: <Assessment />, color: '#ffffffff' },
     { text: 'Quản lý Hỏi & Đáp', path: '/admin/qna', icon: <QuestionAnswer />, color: '#ffffffff' },
+    { text: 'Sao lưu dữ liệu', path: '/admin/backup', icon: <QuestionAnswer />, color: '#ffffffff' },
 
 
   ];

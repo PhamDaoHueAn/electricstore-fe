@@ -19,7 +19,7 @@ import SupplierManagement from './components/Admin/SupplierMannagement/SupplierM
 import QuestionAndAnswerManagement from './components/Admin/QuestionAndAnswerManagement/QuestionAndAnswerManagement';
 import ImportManagement from './components/Admin/ImportManagement/ImportManagement';
 import StatisticsReport from './components/Admin/StatisticsReport/StatisticsReport';
-
+import BackupManagement from './components/Admin/BackupManagement';
 import Home from './components/Customer/Home';
 import { isAuthenticated, isAdmin, isAdminOrEmployee } from './services/auth';
 import ProductDetail from './components/Customer/ProductDetail';
@@ -206,6 +206,14 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <EmployeeManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/backup"
+            element={
+              <ProtectedRoute adminOrEmployee>
+                <BackupManagement />
               </ProtectedRoute>
             }
           />

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Typography,
   Button,
   Box,
+  TextField,
   Table,
   TableBody,
   TableCell,
@@ -27,6 +28,7 @@ const GUEST_CART_KEY = 'guestCart';
 const Cart = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
+  const [editQuantities, setEditQuantities] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -67,7 +69,7 @@ const Cart = () => {
   };
 
   // Hàm load giỏ hàng (có thể gọi lại)
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     setLoading(true);
     setError('');
 
@@ -88,11 +90,18 @@ const Cart = () => {
     }
 
     setLoading(false);
-  };
+  }, [isLoggedIn]);
 
   useEffect(() => {
     fetchCart();
-  }, [isLoggedIn]);
+  }, [fetchCart]);
+
+  // keep editable quantities in sync with cart items
+  useEffect(() => {
+    const map = {};
+    cartItems.forEach(i => { map[i.productId] = i.quantity || 1; });
+    setEditQuantities(map);
+  }, [cartItems]);
 
   // Cập nhật số lượng
   const handleUpdateQuantity = async (productId, quantity) => {
@@ -110,7 +119,7 @@ const Cart = () => {
         await fetchCart();
         window.dispatchEvent(new Event('cartUpdate'));
       } catch {
-        setError('Cập nhật thất bại.');
+        setError('Tồn kho không đủ.');
       }
     } else {
       try {
@@ -224,15 +233,47 @@ const Cart = () => {
                     <TableCell>{item.productName}</TableCell>
                     <TableCell align="right">{(item.sellPrice || 0).toLocaleString('vi-VN')} VNĐ</TableCell>
                     <TableCell align="center">
-                      <Box className={styles.quantityControl}>
+                      <Box className={styles.quantityControl} sx={{ alignItems: 'center' }}>
                         <IconButton
-                          onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
+                          onClick={() => {
+                            const newQ = Math.max(1, (editQuantities[item.productId] || item.quantity) - 1);
+                            setEditQuantities(prev => ({ ...prev, [item.productId]: newQ }));
+                            handleUpdateQuantity(item.productId, newQ);
+                          }}
+                          disabled={(editQuantities[item.productId] || item.quantity) <= 1}
                         >
                           <RemoveIcon />
                         </IconButton>
-                        <Typography>{item.quantity}</Typography>
-                        <IconButton onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}>
+
+                        <TextField
+                          value={editQuantities[item.productId] ?? item.quantity}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/[^0-9]/g, '');
+                            const q = v === '' ? '' : Math.max(1, parseInt(v, 10));
+                            setEditQuantities(prev => ({ ...prev, [item.productId]: q }));
+                          }}
+                          onBlur={() => {
+                            const q = Number(editQuantities[item.productId] || item.quantity);
+                            if (q >= 1 && q !== item.quantity) handleUpdateQuantity(item.productId, q);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const q = Number(editQuantities[item.productId] || item.quantity);
+                              if (q >= 1 && q !== item.quantity) handleUpdateQuantity(item.productId, q);
+                            }
+                          }}
+                          inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', min: 1, style: { textAlign: 'center', width: 64 } }}
+                          size="small"
+                          type="number"
+                        />
+
+                        <IconButton
+                          onClick={() => {
+                            const newQ = (editQuantities[item.productId] || item.quantity) + 1;
+                            setEditQuantities(prev => ({ ...prev, [item.productId]: newQ }));
+                            handleUpdateQuantity(item.productId, newQ);
+                          }}
+                        >
                           <AddIcon />
                         </IconButton>
                       </Box>
