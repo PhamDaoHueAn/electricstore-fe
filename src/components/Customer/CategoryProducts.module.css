@@ -117,13 +117,13 @@
   position: relative;
   z-index: 60;
   /* keep sort control above nearby elements */
-  padding-top: 10px;
+  padding-top: 6px;
   /* create a little breathing room from elements above */
 }
 
 .sortSelect {
-  min-width: 100px;
-  max-width: 200px;
+  min-width: 120px;
+  max-width: 220px;
   width: 100%;
   box-sizing: border-box;
   height: 48px;
@@ -158,6 +158,16 @@
     padding-left: 12px;
   }
 }
+
+/* Visible non-floating label used to avoid overlap issues */
+.sortLabel {
+  color: #95d3f5ff;
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 5px;
+}
+
 
 /* === GRID SẢN PHẨM - 2 SP/HÀNG TRÊN MOBILE === */
 .productGrid {
