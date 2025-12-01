@@ -117,6 +117,7 @@
 }
 
 .item {
+  position: relative;
   background: white;
   border-radius: 12px;
   overflow: hidden;
