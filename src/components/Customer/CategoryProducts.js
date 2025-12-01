@@ -111,36 +111,38 @@ const CategoryProducts = () => {
 
         {/* Brand Carousel */}
         {brands.length > 0 && (
-          <section className={styles.brandMenu}>
-            <div className={styles.listBrands}>
-              <Slider {...brandSliderSettings}>
-                {brands.map((brand) => (
-                  <div
-                    key={brand.brandId}
-                    className={`${styles.brandItem} ${selectedBrand === brand.brandId ? styles.selected : ''}`}
-                  >
-                    <a
 
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleBrandClick(brand.brandId);
-                      }}
-                    >
-                      <img
-                        src={brand.imageUrl || '/images/brand-placeholder.jpg'}
-                        alt={brand.brandName}
-                        width="43px"
-                        height="43"
-                        onError={(e) => { e.target.src = '/images/brand-placeholder.jpg'; }}
-                      />
-                      <p>{brand.brandName}</p>
-                    </a>
-                  </div>
-                ))}
-              </Slider>
-            </div>
-          </section>
+          <Box className={styles.brandSection}>
+            <Slider
+              dots={false}
+              infinite={false}           // Không vòng
+              speed={500}
+              slidesToShow={1}
+              slidesToScroll={1}
+              variableWidth={true}       // Mỗi item tự co theo nội dung
+              arrows={false}
+              swipeToSlide={true}
+              touchThreshold={10}
+              className={styles.brandSlider}
+            >
+              {brands.map((brand) => (
+                <Box
+                  key={brand.brandId}
+                  className={`${styles.brandItem} ${selectedBrand === brand.brandId ? styles.selected : ''}`}
+                  onClick={() => handleBrandClick(brand.brandId)}
+                >
+                  <img
+                    src={brand.imageUrl || '/images/brand-placeholder.jpg'}
+                    alt={brand.brandName}
+                    onError={(e) => { e.target.src = '/images/brand-placeholder.jpg'; }}
+                  />
+                  <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>
+                    {brand.brandName}
+                  </Typography>
+                </Box>
+              ))}
+            </Slider>
+          </Box>
         )}
 
         {/* Sort Select */}

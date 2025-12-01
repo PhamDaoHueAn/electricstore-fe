@@ -37,43 +37,46 @@
 }
 
 /* === THƯƠNG HIỆU CAROUSEL === */
-.brandMenu {
+/* === THƯƠNG HIỆU: 1 HÀNG DUY NHẤT TRÊN MỌI THIẾT BỊ === */
+.brandSection {
   margin: 20px 0;
-  background-color: white;
+  background: white;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .listBrands :global(.slick-slide) {
-  padding: 10px 0px;
+  padding: 0 8px;
 }
 
 .brandItem {
   text-align: center;
+  padding: 12px 8px;
   border-radius: 12px;
   transition: all 0.3s ease;
   background: #fafafa;
+  text-align: center;
   cursor: pointer;
-  margin: 10 auto;
 }
 
 
 .brandItem:hover {
+  background: #f0f7ff;
   transform: translateY(-4px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .brandItem.selected {
-  background: #e3f2fd;
-  border: 3px solid #1976d2;
+  background: #e3f2fd !important;
+  border: 3px solid #1976d2 !important;
 }
 
 .brandItem img {
   width: 40px;
   height: 40px;
   object-fit: contain;
-  margin: 5px auto;
+  margin: 0 auto 8px;
   background: white;
   padding: 8px;
   border-radius: 12px;
@@ -89,19 +92,71 @@
   overflow: hidden;
 }
 
+/* Mobile nhỏ hơn một chút cho vừa tay */
+@media (max-width: 480px) {
+  .brandItem {
+    width: 100px !important;
+    padding: 8px 6px;
+  }
+
+  .brandItem img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .brandItem p {
+    font-size: 0.85rem;
+  }
+}
+
 /* === SẮP XẾP === */
 .sortContainer {
-  margin: 20px 0;
+  margin: 20px 0 12px;
   display: flex;
   justify-content: center;
+  position: relative;
+  z-index: 60;
+  /* keep sort control above nearby elements */
+  padding-top: 10px;
+  /* create a little breathing room from elements above */
 }
 
 .sortSelect {
-  min-width: 240px;
+  min-width: 100px;
+  max-width: 200px;
+  width: 100%;
+  box-sizing: border-box;
   height: 48px;
   background-color: white !important;
   border-radius: 24px !important;
   font-size: 1rem;
+}
+
+/* Ensure the floating InputLabel is visible and not overlapped */
+.sortContainer .MuiInputLabel-root {
+  background: white;
+  padding: 0 8px;
+  border-radius: 12px;
+  transform-origin: left top;
+  z-index: 70;
+}
+
+@media (max-width: 768px) {
+  .sortSelect {
+    max-width: 320px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sortSelect {
+    max-width: 260px;
+    min-width: 160px;
+  }
+
+  .sortContainer {
+    justify-content: flex-start;
+    padding-left: 12px;
+  }
 }
 
 /* === GRID SẢN PHẨM - 2 SP/HÀNG TRÊN MOBILE === */
@@ -119,6 +174,7 @@
 }
 
 .item {
+  position: relative;
   background: white;
   border-radius: 12px;
   overflow: hidden;
