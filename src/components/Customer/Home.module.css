@@ -295,6 +295,20 @@ h3 {
   font-size: 0.8rem;
 }
 
+.voteTxt {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #f57c00;
+}
+
+.voteTxt i {
+  width: 16px;
+  height: 16px;
+  background: url('../../images/star-icon.png') no-repeat center;
+  background-size: contain;
+}
+
 /* ==================== RESPONSIVE HOÀN HẢO ==================== */
 @media (max-width: 1400px) {
   .listproduct { grid-template-columns: repeat(4, 1fr); }

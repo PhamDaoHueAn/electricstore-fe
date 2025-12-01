@@ -34,47 +34,58 @@
 }
 
 /* === THƯƠNG HIỆU CAROUSEL === */
-.brandMenu {
+/* === THƯƠNG HIỆU: 1 HÀNG DUY NHẤT TRÊN MỌI THIẾT BỊ === */
+.brandSection {
   margin: 20px 0;
-  background-color: white;
+  background: white;
   border-radius: 16px;
   overflow: hidden;
   padding: 16px 8px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
 
-.listBrands :global(.slick-slide) {
-  padding: 0 8px;
+.brandSlider :global(.slick-track) {
+  display: flex !important;
+  align-items: center;
+}
+
+.brandSlider :global(.slick-slide) {
+  height: auto !important;
+  display: flex;
+  justify-content: center;
 }
 
 .brandItem {
-  text-align: center;
-  padding: 12px 8px;
+  padding: 10px 8px;
   border-radius: 12px;
   transition: all 0.3s ease;
   background: #fafafa;
+  text-align: center;
   cursor: pointer;
+  width: 110px !important;
+  margin: 0 4px;
 }
 
 .brandItem:hover {
+  background: #f0f7ff;
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
 
 .brandItem.selected {
-  background: #e3f2fd;
-  border: 3px solid #1976d2;
+  background: #e3f2fd !important;
+  border: 3px solid #1976d2 !important;
 }
 
 .brandItem img {
   width: 70px;
   height: 70px;
   object-fit: contain;
-  margin: 0 auto 8px;
+  border-radius: 12px;
   background: white;
   padding: 8px;
-  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin: 0 auto 8px;
 }
 
 .brandItem p {
@@ -87,6 +98,20 @@
   text-overflow: ellipsis;
 }
 
+/* Mobile nhỏ hơn một chút cho vừa tay */
+@media (max-width: 480px) {
+  .brandItem {
+    width: 100px !important;
+    padding: 8px 6px;
+  }
+  .brandItem img {
+    width: 60px;
+    height: 60px;
+  }
+  .brandItem p {
+    font-size: 0.85rem;
+  }
+}
 /* === SẮP XẾP === */
 .sortContainer {
   margin: 20px 0;
