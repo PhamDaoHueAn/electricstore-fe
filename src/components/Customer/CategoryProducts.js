@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Typography, Box, FormControl, InputLabel, Select, MenuItem, CircularProgress, Pagination } from '@mui/material';
+import { Container, Typography, Box, FormControl, Select, MenuItem, CircularProgress, Pagination } from '@mui/material';
 import Slider from 'react-slick';
 import API from '../../services/api';
 import styles from './CategoryProducts.module.css';
@@ -147,12 +147,14 @@ const CategoryProducts = () => {
 
         {/* Sort Select */}
         <FormControl className={styles.sortContainer}>
-          <InputLabel sx={{ color: '#95d3f5ff', fontSize: '18px' }}>Sắp xếp theo</InputLabel>
+          <div className={styles.sortLabel}>
+            Sắp xếp theo
+          </div>
           <Select
             value={`${sortBy}:${sortOrder}`}
             onChange={handleSortChange}
-            label="Sắp xếp theo"
             className={styles.sortSelect}
+            displayEmpty
           >
             <MenuItem value="CreatedAt:desc">Mới nhất</MenuItem>
             <MenuItem value="Price:asc">Giá: Thấp đến Cao</MenuItem>
