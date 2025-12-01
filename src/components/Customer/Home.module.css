@@ -18,7 +18,10 @@
 .container::before {
   content: '';
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: inherit;
   background-attachment: fixed;
   z-index: -1;
@@ -29,7 +32,7 @@
   margin: 16px auto;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   max-width: 100%;
 }
 
@@ -64,8 +67,8 @@
   background-color: white;
   border-radius: 16px;
   overflow: hidden;
-  padding: 16px 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  padding: 0px 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .listCates {
@@ -74,12 +77,9 @@
 
 /* Cải thiện trải nghiệm kéo tay trên mobile */
 .listCates :global(.slick-slide) {
-  padding: 0 6px;
+  padding: 16px 0px;
 }
 
-.listCates :global(.slick-track) {
-  padding: 8px 0;
-}
 
 .cateItem {
   position: relative;
@@ -89,8 +89,7 @@
   transition: all 0.3s ease;
   text-align: center;
   background: #fafafa;
-  padding: 12px 8px;
-  height: 140px;
+  height: 110px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -99,7 +98,7 @@
 
 .cateItem:hover {
   transform: translateY(-6px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .cateItem.selected {
@@ -132,14 +131,14 @@
 }
 
 .cateItem img {
-  width: 76px;
-  height: 76px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
-  margin: 8px auto;
+  margin: 4px auto;
   background: white;
   padding: 8px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .cateItem p {
@@ -176,7 +175,7 @@
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   height: 100%;
   display: flex;
@@ -185,7 +184,7 @@
 
 .item:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.16);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
 }
 
 .mainContain {
@@ -295,13 +294,31 @@ h3 {
   font-size: 0.8rem;
 }
 
+.voteTxt {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #f57c00;
+}
+
+.voteTxt i {
+  width: 16px;
+  height: 16px;
+  background: url('../../images/star-icon.png') no-repeat center;
+  background-size: contain;
+}
+
 /* ==================== RESPONSIVE HOÀN HẢO ==================== */
 @media (max-width: 1400px) {
-  .listproduct { grid-template-columns: repeat(4, 1fr); }
+  .listproduct {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 @media (max-width: 1024px) {
-  .listproduct { grid-template-columns: repeat(3, 1fr); }
+  .listproduct {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -309,10 +326,18 @@ h3 {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
-  
-  .itemImg { height: 170px; }
-  h3 { font-size: 0.92rem; }
-  .price { font-size: 1.1rem; }
+
+  .itemImg {
+    height: 170px;
+  }
+
+  h3 {
+    font-size: 0.92rem;
+  }
+
+  .price {
+    font-size: 1.1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -320,17 +345,28 @@ h3 {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-  
-  .itemImg { height: 150px; }
-  .thumb { object-fit: contain; }
-  
+
+  .itemImg {
+    height: 150px;
+  }
+
+  .thumb {
+    object-fit: contain;
+  }
+
   h3 {
     font-size: 0.9rem;
     -webkit-line-clamp: 2;
   }
-  
-  .price { font-size: 1.05rem; }
-  .percent { font-size: 0.75rem; padding: 2px 5px; }
+
+  .price {
+    font-size: 1.05rem;
+  }
+
+  .percent {
+    font-size: 0.75rem;
+    padding: 2px 5px;
+  }
 }
 
 /* Cải thiện pagination trên mobile */
@@ -339,12 +375,14 @@ h3 {
     justify-content: center;
     flex-wrap: wrap;
   }
+
   .MuiPaginationItem-root {
     min-width: 36px;
     height: 36px;
     font-size: 0.9rem;
   }
 }
+
 /* === MOBILE CATEGORY – CHẮC CHẮN CHỈ 1 HÀNG === */
 /* Mobile Category – 1 hàng duy nhất */
 .mobileCategoryWrapper {
@@ -352,7 +390,7 @@ h3 {
   border-radius: 16px;
   overflow: hidden;
   padding: 12px 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   margin: 16px 0;
 }
 
@@ -386,8 +424,13 @@ h3 {
 
 /* Ẩn đúng phiên bản */
 @media (max-width: 767px) {
-  .mainMenuCategories { display: none !important; }
+  .mainMenuCategories {
+    display: none !important;
+  }
 }
+
 @media (min-width: 768px) {
-  .mobileCategoryWrapper { display: none !important; }
+  .mobileCategoryWrapper {
+    display: none !important;
+  }
 }
