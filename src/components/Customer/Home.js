@@ -82,7 +82,7 @@ const Home = () => {
       const response = await API.get('/Products/GetAll', {
         params: {
           pageNumber: currentPage,
-          pageSize: 10,
+          pageSize: 12,
           sortBy: 'CreatedAt',
           sortOrder: 'desc',
           categoryId: selectedCategory || undefined,
@@ -246,6 +246,7 @@ const Home = () => {
                           />
                           <p>{category.categoryName}</p>
                         </a>
+
                       </div>
                     );
                   })}
