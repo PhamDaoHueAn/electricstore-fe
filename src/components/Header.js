@@ -221,7 +221,7 @@ const Header = () => {
               className={styles.categoryButton}
               startIcon={<MenuIcon />}
             >
-              <span className={styles.categoryText}>Danhs mục</span>
+              <span className={styles.categoryText}>Danh mục</span>
             </Button>
 
             {/* Menu dropdown */}
