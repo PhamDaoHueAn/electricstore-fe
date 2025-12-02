@@ -49,7 +49,7 @@ const Cart = () => {
 
   const saveGuestCart = (items) => {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
-    window.dispatchEvent(new Event('cartUpdate')); // CẬP NHẬT HEADER
+    window.dispatchEvent(new Event('cartUpdate')); 
   };
 
   const callApi = async (apiCall) => {
@@ -62,13 +62,12 @@ const Cart = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         setIsLoggedIn(false);
-        window.dispatchEvent(new Event('authChange')); // KHÔNG RELOAD
+        window.dispatchEvent(new Event('authChange')); 
       }
       throw error;
     }
   };
 
-  // Hàm load giỏ hàng (có thể gọi lại)
   const fetchCart = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -96,14 +95,12 @@ const Cart = () => {
     fetchCart();
   }, [fetchCart]);
 
-  // keep editable quantities in sync with cart items
   useEffect(() => {
     const map = {};
     cartItems.forEach(i => { map[i.productId] = i.quantity || 1; });
     setEditQuantities(map);
   }, [cartItems]);
 
-  // Cập nhật số lượng
   const handleUpdateQuantity = async (productId, quantity) => {
     if (quantity < 1) return;
     setLoading(true);
@@ -115,7 +112,6 @@ const Cart = () => {
             headers: { Authorization: `Bearer ${token}` }
           })
         );
-        // Load lại giỏ hàng để lấy giá FlashSale mới nhất
         await fetchCart();
         window.dispatchEvent(new Event('cartUpdate'));
       } catch {
@@ -123,7 +119,6 @@ const Cart = () => {
       }
     } else {
       try {
-        // Gọi API lấy giá FlashSale cho giỏ hàng khách
         const priceResponse = await API.get(`/FlashSale/get-price-flashsale?productId=${productId}&quantity=${quantity}`);
         const newPrice = priceResponse.data;
 
@@ -134,7 +129,6 @@ const Cart = () => {
         saveGuestCart(updated);
       } catch (err) {
         console.error('Lỗi lấy giá FlashSale:', err);
-        // Nếu lỗi, vẫn cập nhật số lượng nhưng giữ nguyên giá
         const updated = cartItems.map(item =>
           item.productId === productId ? { ...item, quantity } : item
         );
@@ -145,7 +139,6 @@ const Cart = () => {
     setLoading(false);
   };
 
-  // Xóa sản phẩm
   const handleRemoveItem = async (productId) => {
     setLoading(true);
     if (isLoggedIn) {
@@ -155,7 +148,6 @@ const Cart = () => {
             headers: { Authorization: `Bearer ${token}` }
           })
         );
-        // Load lại giỏ hàng để cập nhật FlashSale cho các sản phẩm còn lại
         await fetchCart();
         window.dispatchEvent(new Event('cartUpdate'));
       } catch {
@@ -169,7 +161,6 @@ const Cart = () => {
     setLoading(false);
   };
 
-  // Xóa toàn bộ
   const handleClearCart = async () => {
     setLoading(true);
     if (isLoggedIn) {
@@ -188,9 +179,8 @@ const Cart = () => {
     setLoading(false);
   };
 
-  // ĐI CHECKOUT – KHÔNG BẮT LOGIN
   const handleCheckout = () => {
-    navigate('/checkout'); // LUÔN ĐƯỢC PHÉP
+    navigate('/checkout'); 
   };
 
   const calculateTotal = () => {

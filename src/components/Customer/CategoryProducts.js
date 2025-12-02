@@ -20,7 +20,6 @@ const CategoryProducts = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Cài đặt cho slider thương hiệu
   const brandSliderSettings = {
     dots: true,
     infinite: true,
@@ -39,7 +38,6 @@ const CategoryProducts = () => {
     ],
   };
 
-  // Fetch thương hiệu theo danh mục
   const fetchBrands = async () => {
     try {
       const response = await API.get(`/Brands/get-by-categoryId/${categoryId}`, { timeout: 5000 });
@@ -51,7 +49,6 @@ const CategoryProducts = () => {
     }
   };
 
-  // Fetch sản phẩm theo danh mục và thương hiệu
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -82,22 +79,19 @@ const CategoryProducts = () => {
     fetchProducts();
   }, [categoryId, selectedBrand, sortBy, sortOrder, pageNumber]);
 
-  // Xử lý bấm vào thương hiệu
   const handleBrandClick = (brandId) => {
     console.log('Brand clicked:', brandId);
     setSelectedBrand(brandId);
-    setPageNumber(1); // Reset về trang 1 khi chọn thương hiệu
+    setPageNumber(1); 
   };
 
-  // Xử lý thay đổi sắp xếp
   const handleSortChange = (event) => {
     const [newSortBy, newSortOrder] = event.target.value.split(':');
     setSortBy(newSortBy);
     setSortOrder(newSortOrder);
-    setPageNumber(1); // Reset về trang 1 khi thay đổi sắp xếp
+    setPageNumber(1); 
   };
 
-  // Xử lý thay đổi trang
   const handlePageChange = (event, value) => {
     setPageNumber(value);
   };
@@ -109,17 +103,16 @@ const CategoryProducts = () => {
           Sản phẩm theo danh mục
         </Typography>
 
-        {/* Brand Carousel */}
         {brands.length > 0 && (
 
           <Box className={styles.brandSection}>
             <Slider
               dots={false}
-              infinite={false}           // Không vòng
+              infinite={false}          
               speed={500}
               slidesToShow={1}
               slidesToScroll={1}
-              variableWidth={true}       // Mỗi item tự co theo nội dung
+              variableWidth={true}      
               arrows={false}
               swipeToSlide={true}
               touchThreshold={10}
@@ -145,7 +138,6 @@ const CategoryProducts = () => {
           </Box>
         )}
 
-        {/* Sort Select */}
         <FormControl className={styles.sortContainer}>
           <div className={styles.sortLabel}>
             Sắp xếp theo
@@ -162,7 +154,6 @@ const CategoryProducts = () => {
           </Select>
         </FormControl>
 
-        {/* Product List */}
         {loading ? (
           <CircularProgress sx={{ display: 'block', mx: 'auto', mt: 4 }} />
         ) : products.length === 0 ? (

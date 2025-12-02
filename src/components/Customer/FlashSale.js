@@ -110,10 +110,9 @@ const FlashSale = () => {
 
   if (loading || !hasAnyFlashSale) return null;
 
-  // CÀI ĐẶT CAROUSEL MOBILE: KHÔNG VÒNG, CHỈ LƯỚT TỚI CUỐI
   const mobileSliderSettings = {
     dots: true,
-    infinite: false,           // KHÔNG LƯỢT VÒNG
+    infinite: false,          
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -123,7 +122,7 @@ const FlashSale = () => {
   };
 
   return (
-    <Box className={styles.flashSaleWrapper}> {/* THÊM WRAPPER ĐỂ CÓ NỀN TRẮNG */}
+    <Box className={styles.flashSaleWrapper}>
       <Container maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
         <Box className={styles.flashSaleContainer}>
           {/* HEADER */}
@@ -226,7 +225,6 @@ const FlashSale = () => {
                 </Box>
               </Box>
 
-              {/* Mobile: Carousel KHÔNG VÒNG */}
               <Box className={styles.mobileProductSlider} sx={{ display: { xs: 'block', md: 'none' } }}>
                 <Slider {...mobileSliderSettings}>
                   {selectedTimeSlot.items.map(item => {

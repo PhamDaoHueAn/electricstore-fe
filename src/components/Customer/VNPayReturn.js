@@ -14,31 +14,24 @@ const VNPayReturn = () => {
   useEffect(() => {
     const processPayment = async () => {
       try {
-        // Lấy tất cả query params từ URL
         const queryString = window.location.search;
 
         console.log('Query String:', queryString);
 
-        // Gọi API backend để xác thực thanh toán
         const response = await API.get(`/Checkout/VnPayReturn${queryString}`);
 
         console.log('API Response:', response.data);
 
-        // Kiểm tra nhiều cấu trúc response có thể có
         if (response.data) {
-          // Trường hợp 1: { order: {...} }
           if (response.data.order) {
             setOrderData(response.data.order);
           }
-          // Trường hợp 2: { Order: {...} } (Pascal case)
           else if (response.data.Order) {
             setOrderData(response.data.Order);
           }
-          // Trường hợp 3: response.data chính là order data
           else if (response.data.orderCode || response.data.OrderCode) {
             setOrderData(response.data);
           }
-          // Trường hợp 4: { message: "...", order: {...} }
           else if (response.data.message && response.data.message.toLowerCase().includes('success')) {
             setOrderData(response.data);
           }

@@ -21,7 +21,7 @@ import API from '../services/api';
 
 const MyChatbot = () => {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState([]); // { role: 'user'|'model', message: string, products?: array, timestamp: string }
+  const [messages, setMessages] = useState([]); 
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -34,7 +34,6 @@ const MyChatbot = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Lấy lịch sử chat khi mở
   useEffect(() => {
     const fetchHistory = async () => {
       try {
@@ -75,7 +74,6 @@ const MyChatbot = () => {
     const userMsg = input.trim();
     setInput('');
 
-    // Thêm tin nhắn người dùng
     const newUserMessage = {
       role: 'user',
       message: userMsg,
@@ -114,7 +112,6 @@ const MyChatbot = () => {
     }
   };
 
-  // Component hiển thị sản phẩm gợi ý
   const ProductSuggestions = ({ products }) => {
     if (!products || products.length === 0) return null;
 
@@ -172,7 +169,6 @@ const MyChatbot = () => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#f5f7fb' }}>
-      {/* Header */}
       <Box sx={{ bgcolor: '#0560e7', color: 'white', p: 2, textAlign: 'center' }}>
         <Typography variant="h6" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
           <SmartToyIcon /> Trợ lý ảo Điện Máy Xanh
@@ -180,7 +176,7 @@ const MyChatbot = () => {
         <Typography variant="caption" sx={{ opacity: 0.9 }}>Hỗ trợ 24/7 - Gợi ý sản phẩm nhanh</Typography>
       </Box>
 
-      {/* Tin nhắn */}
+
       <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
         {messages.map((msg, index) => (
           <Box
@@ -213,7 +209,6 @@ const MyChatbot = () => {
                 </Typography>
               </Paper>
 
-              {/* Gợi ý sản phẩm */}
               {msg.role === 'model' && msg.products && msg.products.length > 0 && (
                 <ProductSuggestions products={msg.products} />
               )}
@@ -225,7 +220,6 @@ const MyChatbot = () => {
           </Box>
         ))}
 
-        {/* Đang trả lời */}
         {loading && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <CircularProgress size={20} />
@@ -238,7 +232,6 @@ const MyChatbot = () => {
         <div ref={messagesEndRef} />
       </Box>
 
-      {/* Input */}
       <Box sx={{ p: 2, bgcolor: 'white', borderTop: '1px solid #eee' }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <TextField

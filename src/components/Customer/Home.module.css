@@ -1,5 +1,3 @@
-/* src/components/Customer/Home.module.css */
-/* ĐÃ ĐƯỢC TỐI ƯU RESPONSIVE - GIỮ NGUYÊN PHONG CÁCH DMX */
 
 .container {
   background-color: #f5f5f5;
@@ -27,7 +25,6 @@
   z-index: -1;
 }
 
-/* ==================== BANNER - RESPONSIVE ==================== */
 .banner {
   margin: 16px auto;
   border-radius: 16px;
@@ -46,7 +43,6 @@
   border-radius: 16px;
 }
 
-/* Tự động điều chỉnh chiều cao banner theo màn hình */
 @media (max-width: 768px) {
   .bannerImage {
     min-height: 180px;
@@ -61,7 +57,6 @@
   }
 }
 
-/* ==================== CATEGORY CAROUSEL - KÉO TAY MƯỢT ==================== */
 .mainMenuCategories {
   margin: 20px 0;
   background-color: white;
@@ -75,11 +70,9 @@
   position: relative;
 }
 
-/* Cải thiện trải nghiệm kéo tay trên mobile */
 .listCates :global(.slick-slide) {
   padding: 16px 0px;
 }
-
 
 .cateItem {
   position: relative;
@@ -153,7 +146,6 @@
   padding: 0 4px;
 }
 
-/* ==================== PRODUCT GRID - 2 SẢN PHẨM TRÊN MOBILE ==================== */
 .productGrid {
   margin-top: 24px;
   padding: 0 8px;
@@ -168,7 +160,6 @@
   margin: 0;
 }
 
-/* Giữ nguyên phong cách cũ nhưng responsive tốt hơn */
 .item {
   position: relative;
   background: white;
@@ -308,7 +299,6 @@ h3 {
   background-size: contain;
 }
 
-/* ==================== RESPONSIVE HOÀN HẢO ==================== */
 @media (max-width: 1400px) {
   .listproduct {
     grid-template-columns: repeat(4, 1fr);
@@ -369,7 +359,6 @@ h3 {
   }
 }
 
-/* Cải thiện pagination trên mobile */
 @media (max-width: 600px) {
   .MuiPagination-root {
     justify-content: center;
@@ -383,8 +372,6 @@ h3 {
   }
 }
 
-/* === MOBILE CATEGORY – CHẮC CHẮN CHỈ 1 HÀNG === */
-/* Mobile Category – 1 hàng duy nhất */
 .mobileCategoryWrapper {
   background: white;
   border-radius: 16px;
@@ -422,7 +409,6 @@ h3 {
   border: 2px solid #1976d2 !important;
 }
 
-/* Ẩn đúng phiên bản */
 @media (max-width: 767px) {
   .mainMenuCategories {
     display: none !important;

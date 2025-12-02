@@ -1,9 +1,7 @@
-/* src/components/Customer/FlashSale.module.css */
-/* FLASH SALE - MOBILE: 1 SẢN PHẨM/HÀNG + LƯỚT NGANG SIÊU MƯỢT */
 
 .flashSaleWrapper {
-  background: white;           /* NỀN TRẮNG CHO TOÀN BỘ */
-  margin: 16px 0 0 0 !important;   /* KHÔNG DƯ KHOẢNG TRỐNG LỚN */
+  background: white;          
+  margin: 16px 0 0 0 !important;   
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
@@ -136,12 +134,10 @@
   opacity: 1;
 }
 
-/* Loại bỏ margin dưới cùng để sát Category */
 .flashSaleWrapper + * {
   margin-top: 8px !important;
 }
 
-/* RESPONSIVE */
 @media (max-width: 768px) {
   .productGrid { display: none; }
   .mobileProductSlider { display: block !important; }
@@ -298,7 +294,6 @@
   .flashPrice { font-size: 1.05rem; }
 }
 
-/* Hiệu ứng */
 @keyframes pulse {
   0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
   70% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }

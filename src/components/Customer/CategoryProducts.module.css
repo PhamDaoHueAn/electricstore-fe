@@ -1,5 +1,3 @@
-/* src/components/Customer/CategoryProducts.module.css */
-/* RESPONSIVE HOÀN HẢO - 2 SẢN PHẨM/HÀNG TRÊN MOBILE - ĐẸP NHƯ TRANG CHỦ */
 
 .container {
   background-color: #f5f5f5;
@@ -36,8 +34,6 @@
   text-align: center;
 }
 
-/* === THƯƠNG HIỆU CAROUSEL === */
-/* === THƯƠNG HIỆU: 1 HÀNG DUY NHẤT TRÊN MỌI THIẾT BỊ === */
 .brandSection {
   margin: 20px 0;
   background: white;
@@ -92,7 +88,7 @@
   overflow: hidden;
 }
 
-/* Mobile nhỏ hơn một chút cho vừa tay */
+
 @media (max-width: 480px) {
   .brandItem {
     width: 100px !important;
@@ -109,16 +105,14 @@
   }
 }
 
-/* === SẮP XẾP === */
+
 .sortContainer {
   margin: 20px 0 12px;
   display: flex;
   justify-content: center;
   position: relative;
   z-index: 60;
-  /* keep sort control above nearby elements */
   padding-top: 6px;
-  /* create a little breathing room from elements above */
 }
 
 .sortSelect {
@@ -132,7 +126,6 @@
   font-size: 1rem;
 }
 
-/* Ensure the floating InputLabel is visible and not overlapped */
 .sortContainer .MuiInputLabel-root {
   background: white;
   padding: 0 8px;
@@ -159,7 +152,6 @@
   }
 }
 
-/* Visible non-floating label used to avoid overlap issues */
 .sortLabel {
   color: #95d3f5ff;
   font-size: 18px;
@@ -168,8 +160,6 @@
   margin-left: 5px;
 }
 
-
-/* === GRID SẢN PHẨM - 2 SP/HÀNG TRÊN MOBILE === */
 .productGrid {
   margin-top: 16px;
 }
@@ -340,7 +330,6 @@
   font-size: 0.8rem;
 }
 
-/* === RESPONSIVE HOÀN HẢO === */
 @media (max-width: 1400px) {
   .listproduct {
     grid-template-columns: repeat(4, 1fr);
@@ -414,7 +403,6 @@
   }
 }
 
-/* Pagination đẹp */
 .MuiPagination-root {
   margin-top: 32px;
   display: flex;

@@ -5,7 +5,7 @@ import {
   TableContainer, TableHead, TableRow, Paper, CircularProgress, Alert,
   Button, Chip, Dialog, DialogTitle, DialogContent, DialogActions,
   DialogContentText, IconButton, Tooltip, TextField, MenuItem, Grid,
-  Snackbar, InputLabel
+  Snackbar, InputLabel, AlertTitle, InputAdornment
 } from '@mui/material';
 
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -34,7 +34,6 @@ const Profile = () => {
   const [avatarPreview, setAvatarPreview] = useState('/images/default-avatar.jpg');
   const fileInputRef = useRef();
 
-  // Gender: 1 = Nam, 0 = Nữ, null/khác = Khác
   const [formData, setFormData] = useState({
     Email: '',
     PhoneNumber: '',
@@ -42,14 +41,61 @@ const Profile = () => {
     FullName: '',
     Avatar: null,
     BirthDate: '',
-    Gender: null // null, 0, 1
+    Gender: null
   });
+
+  const [errors, setErrors] = useState({
+    FullName: '',
+    Email: '',
+    PhoneNumber: '',
+    Gender: ''
+  });
+
+  const validateFullName = (value) => {
+    if (!value.trim()) return 'Họ và tên là bắt buộc';
+    if (value.trim().length < 2) return 'Họ tên phải ít nhất 2 ký tự';
+    if (!/^[a-zA-ZÀ-ỹ\s]+$/.test(value)) return 'Họ tên chỉ được chứa chữ cái và khoảng trắng';
+    return '';
+  };
+
+  const validateEmail = (value) => {
+    if (!value.trim()) return 'Email là bắt buộc';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Email không hợp lệ';
+    return '';
+  };
+
+  const validatePhone = (value) => {
+    if (!value.trim()) return 'Số điện thoại là bắt buộc';
+    const cleaned = value.replace(/\D/g, '');
+    if (!/^0[3|5|7|8|9][0-9]{8}$/.test(cleaned)) return 'Số điện thoại không hợp lệ (VD: 0901234567)';
+    return '';
+  };
+
+  const validateGender = (value) => {
+    if (value === null || value === '') return 'Vui lòng chọn giới tính';
+    return '';
+  };
+
+  const validateForm = () => {
+    const nameError = validateFullName(formData.FullName);
+    const emailError = validateEmail(formData.Email);
+    const phoneError = validatePhone(formData.PhoneNumber);
+    const genderError = validateGender(formData.Gender);
+
+    setErrors({
+      FullName: nameError,
+      Email: emailError,
+      PhoneNumber: phoneError,
+      Gender: genderError
+    });
+
+    return !(nameError || emailError || phoneError || genderError);
+  };
 
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [cancellingOrder, setCancellingOrder] = useState(null);
   const [processing, setProcessing] = useState(false);
 
-  // === LẤY DỮ LIỆU ===
   const fetchProfileData = async () => {
     if (!isAuthenticated()) {
       navigate('/login');
@@ -73,7 +119,7 @@ const Profile = () => {
         FullName: profile.fullName || '',
         Avatar: null,
         BirthDate: profile.birthDate ? profile.birthDate.split('T')[0] : '',
-        Gender: profile.gender === 1 ? 1 : profile.gender === 0 ? 0 : null
+        Gender: profile.gender !== null && profile.gender !== undefined ? profile.gender : null
       });
 
       setOrders(ordersRes.data || []);
@@ -94,23 +140,27 @@ const Profile = () => {
     fetchProfileData();
   }, []);
 
-  // === CHỌN ẢNH ===
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Ảnh không được quá 5MB');
-        return;
-      }
-      setFormData(prev => ({ ...prev, Avatar: file }));
-      setAvatarPreview(URL.createObjectURL(file));
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Chỉ chấp nhận file ảnh');
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Ảnh không được quá 5MB');
+      return;
+    }
+
+    setFormData(prev => ({ ...prev, Avatar: file }));
+    setAvatarPreview(URL.createObjectURL(file));
+    setError('');
   };
 
-  // === LƯU THÔNG TIN (ĐÃ SỬA ĐÚNG GENDER 1=Nam, 0=Nữ) ===
   const handleSaveProfile = async () => {
-    if (!formData.FullName.trim() || !formData.PhoneNumber.trim() || !formData.Email.trim()) {
-      setError('Vui lòng nhập đầy đủ họ tên, email và số điện thoại.');
+    if (!validateForm()) {
+      setError('Vui lòng kiểm tra lại thông tin');
       return;
     }
 
@@ -120,12 +170,12 @@ const Profile = () => {
 
     try {
       const data = new FormData();
-      data.append('Email', formData.Email);
-      data.append('PhoneNumber', formData.PhoneNumber);
-      data.append('Address', formData.Address || '');
-      data.append('FullName', formData.FullName);
+      data.append('Email', formData.Email.trim());
+      data.append('PhoneNumber', formData.PhoneNumber.replace(/\D/g, ''));
+      data.append('Address', formData.Address.trim());
+      data.append('FullName', formData.FullName.trim());
       data.append('BirthDate', formData.BirthDate || '');
-      data.append('Gender', formData.Gender ?? ''); // Gửi null → backend hiểu là "Khác"
+      data.append('Gender', formData.Gender);
       if (formData.Avatar) data.append('Avatar', formData.Avatar);
 
       await API.put('/Customers/EditMyProfile', data, {
@@ -134,13 +184,8 @@ const Profile = () => {
 
       setSuccessMsg('Cập nhật thông tin thành công!');
       setOpenEdit(false);
-
-      // Refetch để lấy dữ liệu chính xác nhất từ server
       fetchProfileData();
-
-      // Cập nhật Header ngay lập tức
       window.dispatchEvent(new Event('authChange'));
-
     } catch (err) {
       setError(err.response?.data?.message || 'Cập nhật thất bại. Vui lòng thử lại.');
     } finally {
@@ -148,7 +193,6 @@ const Profile = () => {
     }
   };
 
-  // === HỦY ĐƠN ===
   const handleCancelOrder = async () => {
     if (!cancellingOrder) return;
     setProcessing(true);
@@ -163,7 +207,7 @@ const Profile = () => {
       setCancellingOrder(null);
       setSuccessMsg('Hủy đơn hàng thành công!');
     } catch (err) {
-      alert(err.response?.data?.message || 'Hủy đơn hàng thất bại.');
+      setError(err.response?.data?.message || 'Hủy đơn hàng thất bại.');
     } finally {
       setProcessing(false);
     }
@@ -197,7 +241,6 @@ const Profile = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
-      {/* === THÔNG TIN CÁ NHÂN === */}
       <Paper elevation={6} sx={{ borderRadius: 3, overflow: 'hidden', mb: 5, position: 'relative' }}>
         <Box sx={{ background: 'linear-gradient(135deg, #0560e7 0%, #0088ff 100%)', p: 4, color: 'white' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -241,9 +284,7 @@ const Profile = () => {
             <Typography>
               <strong>Ngày sinh:</strong>{' '}
               {user?.birthDate 
-                ? user.birthDate.includes('/') 
-                  ? user.birthDate 
-                  : new Date(user.birthDate).toLocaleDateString('vi-VN')
+                ? new Date(user.birthDate).toLocaleDateString('vi-VN')
                 : 'Chưa cập nhật'
               }
             </Typography>
@@ -255,18 +296,19 @@ const Profile = () => {
         </Box>
       </Paper>
 
-      {/* === FORM CHỈNH SỬA === */}
       <Dialog open={openEdit} onClose={() => !saving && setOpenEdit(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ bgcolor: '#0560e7', color: 'white' }}>
+        <DialogTitle sx={{ bgcolor: '#0560e7', color: 'white', fontWeight: 'bold' }}>
           <EditIcon sx={{ mr: 1 }} /> Chỉnh sửa thông tin cá nhân
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
+          {error && <Alert severity="error" sx={{ mb: 2 }}><AlertTitle>Lỗi</AlertTitle>{error}</Alert>}
+
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <Avatar src={avatarPreview} sx={{ width: 120, height: 120, mx: 'auto', mb: 2 }} />
             <InputLabel htmlFor="avatar-upload">
               <input ref={fileInputRef} type="file" id="avatar-upload" hidden accept="image/*" onChange={handleAvatarChange} />
-              <Button variant="outlined" component="span" startIcon={<PhotoCamera />}>
-                Chọn ảnh đại diện
+              <Button variant="outlined" component="span" startIcon={<PhotoCamera />} size="small">
+                Đổi ảnh đại diện
               </Button>
             </InputLabel>
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
@@ -275,36 +317,121 @@ const Profile = () => {
           </Box>
 
           <Grid container spacing={2}>
-            <Grid item xs={12}><TextField fullWidth label="Họ và tên *" value={formData.FullName} onChange={e => setFormData({ ...formData, FullName: e.target.value })} /></Grid>
-            <Grid item xs={12}><TextField fullWidth label="Email *" type="email" value={formData.Email} onChange={e => setFormData({ ...formData, Email: e.target.value })} /></Grid>
-            <Grid item xs={12}><TextField fullWidth label="Số điện thoại *" value={formData.PhoneNumber} onChange={e => setFormData({ ...formData, PhoneNumber: e.target.value })} /></Grid>
-            <Grid item xs={12}><TextField fullWidth label="Địa chỉ" multiline rows={2} value={formData.Address} onChange={e => setFormData({ ...formData, Address: e.target.value })} /></Grid>
-            <Grid item xs={12} sm={6}><TextField fullWidth label="Ngày sinh" type="date" value={formData.BirthDate} onChange={e => setFormData({ ...formData, BirthDate: e.target.value })} InputLabelProps={{ shrink: true }} /></Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Họ và tên *"
+                value={formData.FullName}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData(prev => ({ ...prev, FullName: value }));
+                  setErrors(prev => ({ ...prev, FullName: validateFullName(value) }));
+                }}
+                error={!!errors.FullName}
+                helperText={errors.FullName}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Email *"
+                type="email"
+                value={formData.Email}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData(prev => ({ ...prev, Email: value }));
+                  setErrors(prev => ({ ...prev, Email: validateEmail(value) }));
+                }}
+                error={!!errors.Email}
+                helperText={errors.Email || 'Ví dụ: example@gmail.com'}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Số điện thoại *"
+                value={formData.PhoneNumber}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  if (value && !value.startsWith('0')) value = '0' + value.slice(-10);
+                  setFormData(prev => ({ ...prev, PhoneNumber: value }));
+                  setErrors(prev => ({ ...prev, PhoneNumber: validatePhone(value) }));
+                }}
+                error={!!errors.PhoneNumber}
+                helperText={errors.PhoneNumber || 'Ví dụ: 0901234567'}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">+84</InputAdornment>,
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Địa chỉ"
+                multiline
+                rows={2}
+                value={formData.Address}
+                onChange={(e) => setFormData(prev => ({ ...prev, Address: e.target.value }))}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Ngày sinh"
+                type="date"
+                value={formData.BirthDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, BirthDate: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 select
-                label="Giới tính"
+                label="Giới tính *"
                 value={formData.Gender === null ? '' : formData.Gender}
-                onChange={e => setFormData({ ...formData, Gender: e.target.value === '' ? null : Number(e.target.value) })}
+                onChange={(e) => {
+                  const value = e.target.value === '' ? null : Number(e.target.value);
+                  setFormData(prev => ({ ...prev, Gender: value }));
+                  setErrors(prev => ({ ...prev, Gender: validateGender(value) }));
+                }}
+                error={!!errors.Gender}
+                helperText={errors.Gender}
               >
+                <MenuItem value=""><em>Chọn giới tính</em></MenuItem>
                 <MenuItem value={1}>Nam</MenuItem>
                 <MenuItem value={0}>Nữ</MenuItem>
               </TextField>
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEdit(false)} disabled={saving}>Hủy</Button>
-          <Button onClick={handleSaveProfile} variant="contained" disabled={saving} startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}>
+        <DialogActions sx={{ p: 3, bgcolor: '#f8f9fa' }}>
+          <Button onClick={() => setOpenEdit(false)} disabled={saving} size="large">
+            Hủy
+          </Button>
+          <Button
+            onClick={handleSaveProfile}
+            variant="contained"
+            disabled={saving}
+            startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
+            size="large"
+            sx={{
+              minWidth: 140,
+              background: 'linear-gradient(45deg, #0560e7, #0088ff)',
+              '&:hover': { background: 'linear-gradient(45deg, #0044cc, #0066cc)' }
+            }}
+          >
             {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* === PHẦN CÒN LẠI GIỮ NGUYÊN (Lịch sử đơn hàng, hủy đơn, snackbar...) === */}
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: '#0560e7' }}>Lịch sử mua hàng</Typography>
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {orders.length === 0 ? (
         <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 3 }}>
           <Typography variant="h6" color="text.secondary">Bạn chưa có đơn hàng nào</Typography>
@@ -383,15 +510,18 @@ const Profile = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenCancelDialog(false)} disabled={processing}>Không, giữ lại</Button>
+          <Button onClick={() => setOpenCancelDialog(false)} disabled={processing}>Không</Button>
           <Button onClick={handleCancelOrder} color="error" variant="contained" disabled={processing}>
-            {processing ? <CircularProgress size={20} /> : 'Đồng ý hủy'}
+            {processing ? <CircularProgress size={20} /> : 'Hủy đơn'}
           </Button>
         </DialogActions>
       </Dialog>
 
       <Snackbar open={!!successMsg} autoHideDuration={4000} onClose={() => setSuccessMsg('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-        <Alert severity="success" onClose={() => setSuccessMsg('')}>{successMsg}</Alert>
+        <Alert severity="success" onClose={() => setSuccessMsg('')} sx={{ width: '100%' }}>
+          <AlertTitle>Thành công!</AlertTitle>
+          {successMsg}
+        </Alert>
       </Snackbar>
     </Container>
   );
