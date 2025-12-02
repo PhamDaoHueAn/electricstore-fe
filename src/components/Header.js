@@ -27,16 +27,14 @@ const Header = () => {
   const [cartCount, setCartCount] = useState(0);
   const [username, setUsername] = useState('');
   const [rolename, setRolename] = useState('');
-  const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg'); // ← THÊM STATE CHO AVATAR
+  const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg'); 
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-  // === DROPDOWN DANH MỤC ===
   const [categories, setCategories] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const isMobile = useMediaQuery('(max-width:599px)');
 
-  // === LẤY DANH MỤC ===
   const fetchCategories = async () => {
     setLoadingCategories(true);
     try {
@@ -58,7 +56,6 @@ const Header = () => {
     navigate(`/category/${categoryId}`);
   };
 
-  // === GIỎ HÀNG KHÁCH VÃNG LAI ===
   const getGuestCartCount = () => {
     try {
       const saved = localStorage.getItem(GUEST_CART_KEY);
@@ -70,7 +67,6 @@ const Header = () => {
     }
   };
 
-  // === LẤY THÔNG TIN NGƯỜI DÙNG (có lấy avatar) ===
   const fetchUserProfile = async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) return;
@@ -79,7 +75,7 @@ const Header = () => {
       const response = await API.get('/Auth/get-my-profile');
       setUsername(response.data.fullName || 'User');
       setRolename(response.data.roleName || 'User');
-      setUserAvatar(response.data.imageUrl || '/images/default-avatar.jpg'); // ← LẤY AVATAR THẬT
+      setUserAvatar(response.data.imageUrl || '/images/default-avatar.jpg');
     } catch (error) {
       console.error('Lỗi lấy profile:', error);
       if (error.response?.status === 401) {
@@ -94,7 +90,6 @@ const Header = () => {
     }
   };
 
-  // === LẤY GIỎ HÀNG ===
   const fetchCartCount = async () => {
     const token = localStorage.getItem('accessToken');
     if (isLoggedIn && token) {
@@ -125,7 +120,6 @@ const Header = () => {
 
   const updateCartCount = () => fetchCartCount();
 
-  // === THEO DÕI ĐĂNG NHẬP ===
   useEffect(() => {
     const handleAuthChange = () => {
       const loggedIn = !!localStorage.getItem('accessToken');
@@ -154,7 +148,6 @@ const Header = () => {
     };
   }, [location.pathname]);
 
-  // === TÌM KIẾM ===
   const fetchSuggestions = async (query) => {
     if (!query.trim()) {
       setSuggestions([]);
@@ -188,7 +181,6 @@ const Header = () => {
     }
   };
 
-  // === ĐĂNG XUẤT ===
   const handleLogoutClick = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -205,7 +197,6 @@ const Header = () => {
     <AppBar position="fixed" className={styles.header}>
       <Toolbar className={styles.toolbar}>
         <div className={styles.mainRow}>
-          {/* LEFT */}
           <div className={styles.leftSection}>
             <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} className={styles.logo}>
               <img
@@ -244,12 +235,11 @@ const Header = () => {
             </Menu>
           </div>
 
-          {/* CENTER - Tìm kiếm (sẽ xuống dòng trên mobile) */}
           <div className={styles.searchContainer}>
             <div className={styles.searchBox}>
               <Autocomplete
                 freeSolo
-                fullWidth                       // ← Thêm dòng này
+                fullWidth                     
                 options={suggestions.map(p => p.productName)}
                 inputValue={searchTerm}
                 onInputChange={handleSearchChange}
@@ -281,7 +271,6 @@ const Header = () => {
             </div>
           </div>
 
-          {/* RIGHT */}
           <div className={styles.rightSection}>
             {isLoggedIn ? (
               <div className={styles.userInfo}>

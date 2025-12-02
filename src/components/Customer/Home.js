@@ -44,18 +44,15 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 12;
 
-  // Chatbot dialog
   const [openChat, setOpenChat] = useState(false);
 
   const handleOpenChat = () => setOpenChat(true);
   const handleCloseChat = () => setOpenChat(false);
 
-  // Tải dữ liệu
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
@@ -76,7 +73,6 @@ const Home = () => {
     fetchAllData();
   }, [currentPage, selectedCategory, searchTerm]);
 
-  // Các hàm fetch giữ nguyên
   const fetchProducts = async () => {
     try {
       const response = await API.get('/Products/GetAll', {
@@ -216,10 +212,7 @@ const Home = () => {
 
         <FlashSale />
 
-        {/* === THAY TOÀN BỘ PHẦN CATEGORY CAROUSEL BẰNG ĐOẠN NÀY === */}
-        {/* === CATEGORY: PC + MOBILE HOÀN HẢO === */}
         <Container maxWidth="lg">
-          {/* ============ PHIÊN BẢN PC & TABLET ============ */}
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             <section className={styles.mainMenuCategories}>
               <div className={styles.listCates}>
@@ -255,7 +248,6 @@ const Home = () => {
             </section>
           </Box>
 
-          {/* ============ PHIÊN BẢN MOBILE: 1 HÀNG DUY NHẤT ============ */}
           <Box sx={{ display: { xs: 'block', md: 'none' }, mt: 2 }}>
             <Box className={styles.mobileCategoryWrapper}>
               <Slider
@@ -335,7 +327,6 @@ const Home = () => {
           </Box>
         </Container>
 
-        {/* Product Grid + Pagination */}
         <Container maxWidth="lg">
           <Box className={styles.productGrid}>
             {products.length === 0 ? (
@@ -461,7 +452,6 @@ const Home = () => {
           <ChatIcon sx={{ fontSize: 30 }} />
         </Fab>
 
-        {/* Khung chat nhỏ */}
         <Dialog
           open={openChat}
           onClose={handleCloseChat}

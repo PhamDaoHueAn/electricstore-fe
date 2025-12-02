@@ -50,13 +50,11 @@ const ProductDetail = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // === KIỂM TRA ĐĂNG NHẬP ===
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     setIsLoggedIn(!!token);
   }, []);
 
-  // === GIỎ HÀNG KHÁCH ===
   const getGuestCart = () => {
     try {
       const saved = localStorage.getItem(GUEST_CART_KEY);
@@ -70,7 +68,6 @@ const ProductDetail = () => {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
   };
 
-  // === FETCH SẢN PHẨM ===
   const fetchProduct = useCallback(async () => {
     setLoadingProduct(true);
     setError(null);
@@ -86,7 +83,6 @@ const ProductDetail = () => {
     }
   }, [productId]);
 
-  // === FETCH ĐÁNH GIÁ ===
   const fetchReviews = useCallback(async () => {
     setLoadingReviews(true);
     try {
@@ -101,7 +97,6 @@ const ProductDetail = () => {
     }
   }, [productId]);
 
-  // === FETCH SẢN PHẨM LIÊN QUAN ===
   const fetchRelatedProducts = useCallback(async () => {
     if (!product) return;
     setLoadingRelated(true);
@@ -126,7 +121,6 @@ const ProductDetail = () => {
     }
   }, [productId, product]);
 
-  // === TẢI DỮ LIỆU ===
   useEffect(() => {
     fetchProduct();
     fetchReviews();
@@ -136,7 +130,6 @@ const ProductDetail = () => {
     if (product) fetchRelatedProducts();
   }, [product, fetchRelatedProducts]);
 
-  // === THÊM VÀO GIỎ ===
   const addToCart = (quantity = 1) => {
     const guestCart = getGuestCart();
     const existing = guestCart.find(i => i.productId === parseInt(productId));
@@ -191,7 +184,6 @@ const ProductDetail = () => {
     }
   };
 
-  // === VIẾT ĐÁNH GIÁ ===
   const handleOpenReviewModal = () => {
     setEditReviewId(null);
     setReviewRating(0);
@@ -244,14 +236,12 @@ const ProductDetail = () => {
     }
   };
 
-  // === XỬ LÝ HÌNH ẢNH ===
   const getImageUrl = (url) => {
     if (!url) return '/placeholder-product.jpg';
     if (url.startsWith('http')) return url;
     return `https://localhost:7248${url}`;
   };
 
-  // === LOADING & ERROR ===
   if (loadingProduct) {
     return (
       <Container sx={{ textAlign: 'center', py: 8 }}>
@@ -270,7 +260,6 @@ const ProductDetail = () => {
     );
   }
 
-  // === DỮ LIỆU SẢN PHẨM ===
   const {
     productName, sellPrice, originalPrice, mainImage, subImages, description,
     brandName, categoryName, manufactureYear, stockQuantity, productReview
@@ -280,7 +269,6 @@ const ProductDetail = () => {
     ? Math.round(((originalPrice - sellPrice) / originalPrice) * 100)
     : 0;
 
-  // === XỬ LÝ DESCRIPTION (OBJECT → ARRAY) ===
   const descriptionPoints = (() => {
     if (!description) return [];
     if (typeof description === 'object' && !Array.isArray(description)) {
@@ -294,7 +282,6 @@ const ProductDetail = () => {
 
   const images = [mainImage, ...(subImages || [])].filter(Boolean);
 
-  // Backend đã tính averageRating sẵn, chỉ cần lấy ra
   const averageRating = product.averageRating || 0;
 
   return (
@@ -306,8 +293,6 @@ const ProductDetail = () => {
         </Button>
 
         <div className={styles.twoColumn}>
-          {/* HÌNH ẢNH */}
-
           <div className={styles.leftCol}>
             <Paper elevation={2} sx={{ height: '100%' }}>
               <Slider
@@ -330,7 +315,6 @@ const ProductDetail = () => {
                 ))}
               </Slider>
 
-              {/* THUMBNAIL NGANG */}
               <Box className={styles.sliderImg}>
                 {images.map((img, i) => (
                   <Box
@@ -350,7 +334,6 @@ const ProductDetail = () => {
             </Paper>
           </div>
 
-          {/* THÔNG TIN */}
           <div className={styles.rightCol}>
             <Typography variant="h4" gutterBottom className={styles.productTitle}>{productName}</Typography>
 
@@ -398,14 +381,9 @@ const ProductDetail = () => {
                 Mua ngay
               </Button>
             </Box>
-
-
-
-            {/* THÔNG SỐ KỸ THUẬT (moved below columns) */}
           </div>
         </div>
 
-        {/* THÔNG SỐ KỸ THUẬT - full width, 2 columns */}
         <Box sx={{ mt: 5 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
             Thông số kỹ thuật
@@ -434,7 +412,6 @@ const ProductDetail = () => {
           </Paper>
         </Box>
 
-        {/* ĐÁNH GIÁ SẢN PHẨM */}
         <Box sx={{ mt: 8 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
             Đánh giá sản phẩm
@@ -459,7 +436,6 @@ const ProductDetail = () => {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: 4 }}>
                 {reviews.map((review) => (
                   <Paper key={review.reviewId} elevation={3} sx={{ p: 3, borderRadius: 2 }}>
-                    {/* Đánh giá chính */}
                     <Box sx={{ display: 'flex', gap: 2 }}>
                       <Box sx={{
                         width: 44, height: 44, borderRadius: '50%',
@@ -484,7 +460,6 @@ const ProductDetail = () => {
                       </Box>
                     </Box>
 
-                    {/* Phản hồi từ cửa hàng */}
                     {review.replyReview && (
                       <Box sx={{ mt: 3, ml: 8, pl: 4, borderLeft: '4px solid #1976d2', backgroundColor: '#f5f9ff', borderRadius: 1, py: 2, px: 3 }}>
                         <Typography variant="body2" fontWeight="bold" color="#1976d2" gutterBottom>
@@ -504,7 +479,6 @@ const ProductDetail = () => {
                 ))}
               </Box>
 
-              {/* NÚT VIẾT ĐÁNH GIÁ */}
               <Box sx={{ textAlign: 'center', mt: 2 }}>
                 <Button
                   variant="contained"
@@ -528,7 +502,6 @@ const ProductDetail = () => {
           )}
         </Box>
 
-        {/* SẢN PHẨM LIÊN QUAN */}
         <Box sx={{ mt: 6 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#d32f2f' }}>Sản phẩm liên quan</Typography>
           {loadingRelated ? (
@@ -570,7 +543,6 @@ const ProductDetail = () => {
           )}
         </Box>
 
-        {/* MODAL VIẾT ĐÁNH GIÁ */}
         <Modal open={openReviewModal} onClose={handleCloseReviewModal}>
           <Box sx={{
             position: 'absolute',

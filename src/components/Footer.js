@@ -11,7 +11,6 @@ const Footer = () => {
         <Container maxWidth="lg">
           <Grid container spacing={4}>
 
-            {/* ABOUT */}
             <Grid item xs={12} md={4} className={styles.footerSection}>
               <Typography variant="h6" gutterBottom className={styles.title}>
                 Về chúng tôi
@@ -21,7 +20,6 @@ const Footer = () => {
               </Typography>
             </Grid>
 
-            {/* CONTACT */}
             <Grid item xs={12} md={4} className={styles.footerSection}>
               <Typography variant="h6" gutterBottom className={styles.title}>
                 Liên hệ
@@ -34,7 +32,6 @@ const Footer = () => {
               </Typography>
             </Grid>
 
-            {/* SOCIAL */}
             <Grid item xs={12} md={4} className={styles.footerSection}>
               <Typography variant="h6" gutterBottom className={styles.title}>
                 Theo dõi chúng tôi

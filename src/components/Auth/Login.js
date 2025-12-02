@@ -8,7 +8,9 @@ import {
   Paper,
   Avatar,
   Box,
-  CssBaseline
+  CssBaseline,
+  Alert,
+  AlertTitle
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Formik, Form, Field } from 'formik';
@@ -23,8 +25,6 @@ const validationSchema = Yup.object({
 
 const Login = () => {
   const navigate = useNavigate();
-
-  // Xóa token nếu chưa đăng nhập khi vào trang login
   useEffect(() => {
     if (!isAuthenticated()) {
       localStorage.removeItem('accessToken');
@@ -47,18 +47,19 @@ const Login = () => {
         <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
           <LockOutlinedIcon />
         </Avatar>
-        <Typography component="h1" variant="h5">
+        <Typography component="h1" variant="h5" fontWeight="bold">
           Đăng Nhập
         </Typography>
+
         <Paper
-          elevation={3}
+          elevation={6}
           sx={{
-            mt: 3,
-            p: 4,
+            mt: 4,
+            p: { xs: 3, sm: 4 },
             width: '100%',
-            boxSizing: 'border-box',
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+            borderRadius: 3,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.12)',
+            bgcolor: '#ffffff',
           }}
         >
           <Formik
@@ -73,13 +74,41 @@ const Login = () => {
                   navigate('/');
                 }
               } catch (err) {
-                setErrors({ submit: err.response?.data?.message || 'Đăng nhập thất bại' });
+                let errorMessage = 'Đăng nhập thất bại. Vui lòng thử lại.';
+
+                if (err.response) {
+                  const data = err.response.data;
+
+                  if (typeof data === 'string') {
+                    errorMessage = data.trim();
+                  }
+                  else if (data?.message) {
+                    errorMessage = data.message;
+                  }
+                  else if (data?.title) {
+                    errorMessage = data.title;
+                  }
+                  else if (data?.detail) {
+                    errorMessage = data.detail;
+                  }
+                  else if (data?.errors) {
+                    errorMessage = Object.values(data.errors).flat().join(', ');
+                  }
+                  else if (err.response.status === 401) {
+                    errorMessage = 'Tên đăng nhập hoặc mật khẩu không đúng';
+                  }
+                } else if (err.message) {
+                  errorMessage = err.message;
+                }
+
+                setErrors({ submit: errorMessage });
+              } finally {
+                setSubmitting(false);
               }
-              setSubmitting(false);
             }}
           >
             {({ errors, touched, isSubmitting }) => (
-              <Form style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Form style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <Field
                   as={TextField}
                   name="username"
@@ -89,12 +118,15 @@ const Login = () => {
                   autoFocus
                   error={touched.username && !!errors.username}
                   helperText={touched.username && errors.username}
+                  variant="outlined"
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
+                      bgcolor: '#f8fbff',
                     },
                   }}
                 />
+
                 <Field
                   as={TextField}
                   name="password"
@@ -104,30 +136,43 @@ const Login = () => {
                   autoComplete="current-password"
                   error={touched.password && !!errors.password}
                   helperText={touched.password && errors.password}
+                  variant="outlined"
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
+                      bgcolor: '#f8fbff',
                     },
                   }}
                 />
                 {errors.submit && (
-                  <Typography color="error" variant="body2" sx={{ textAlign: 'center' }}>
+                  <Alert severity="error" sx={{ borderRadius: 2, py: 1 }}>
+                    <AlertTitle sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                      Đăng nhập thất bại
+                    </AlertTitle>
                     {errors.submit}
-                  </Typography>
+                  </Alert>
                 )}
+
                 <Button
                   type="submit"
                   fullWidth
                   variant="contained"
                   disabled={isSubmitting}
                   sx={{
-                    py: 1.5,
-                    mt: 1,
+                    py: 1.8,
+                    mt: 2,
                     borderRadius: 2,
-                    backgroundColor: '#0560e7',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    background: 'linear-gradient(45deg, #0560e7, #0088ff)',
+                    boxShadow: '0 4px 15px rgba(5, 96, 231, 0.4)',
                     '&:hover': {
-                      backgroundColor: '#004ba0',
+                      background: 'linear-gradient(45deg, #0044cc, #0066cc)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(5, 96, 231, 0.5)',
                     },
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   {isSubmitting ? 'Đang đăng nhập...' : 'Đăng Nhập'}
@@ -135,12 +180,36 @@ const Login = () => {
               </Form>
             )}
           </Formik>
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Link href="/forgot-password" variant="body2" sx={{ mr: 2, color: '#0560e7' }}>
+
+          {/* Liên kết phụ */}
+          <Box sx={{ mt: 4, textAlign: 'center' }}>
+            <Link
+              href="/forgot-password"
+              variant="body2"
+              sx={{
+                color: '#0560e7',
+                fontWeight: 500,
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' },
+              }}
+            >
               Quên mật khẩu?
             </Link>
-            <Link href="/register" variant="body2" sx={{ color: '#0560e7' }}>
-              Chưa có tài khoản? Đăng ký
+            <Typography variant="body2" sx={{ my: 2, color: '#666' }}>
+              hoặc
+            </Typography>
+            <Link
+              href="/register"
+              variant="body2"
+              sx={{
+                color: '#0560e7',
+                fontWeight: 600,
+                textDecoration: 'none',
+                fontSize: '1.05rem',
+                '&:hover': { textDecoration: 'underline' },
+              }}
+            >
+              Chưa có tài khoản? Đăng ký ngay
             </Link>
           </Box>
         </Paper>

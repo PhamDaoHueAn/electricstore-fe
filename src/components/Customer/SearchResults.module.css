@@ -1,5 +1,3 @@
-/* src/components/Customer/SearchResults.module.css */
-/* ĐÃ TỐI ƯU RESPONSIVE - 2 SẢN PHẨM/HÀNG TRÊN ĐIỆN THOẠI */
 
 .container {
   padding: 16px;
@@ -218,7 +216,6 @@
   font-size: 0.8rem;
 }
 
-/* RESPONSIVE HOÀN HẢO */
 @media (max-width: 1400px) {
   .listproduct { grid-template-columns: repeat(4, 1fr); }
 }

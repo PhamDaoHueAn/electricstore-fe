@@ -17,7 +17,7 @@ const SearchResults = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Fetch sản phẩm tìm kiếm
+
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -42,15 +42,13 @@ const SearchResults = () => {
     }
   }, [search, sortBy, sortOrder, pageNumber]);
 
-  // Xử lý thay đổi sắp xếp
   const handleSortChange = (event) => {
     const [newSortBy, newSortOrder] = event.target.value.split(':');
     setSortBy(newSortBy);
     setSortOrder(newSortOrder);
-    setPageNumber(1); // Reset về trang 1 khi thay đổi sắp xếp
+    setPageNumber(1); 
   };
 
-  // Xử lý thay đổi trang
   const handlePageChange = (event, value) => {
     setPageNumber(value);
   };
@@ -136,12 +134,6 @@ const SearchResults = () => {
                     <b>{(product.averageRating || 0).toFixed(1)}</b>
                   </div>
                   <span className={styles.stockCount}>• Tồn kho {product.stockQuantity.toLocaleString('vi-VN')}</span>
-                  {/*
-                  <a href="javascript:;" className={styles.itemSs} onClick={(e) => e.stopPropagation()}>
-                    <i className="bi bi-arrow-left-right"></i>
-                    So sánh
-                  </a>
-                  */}
                 </div>
               </li>
             ))}

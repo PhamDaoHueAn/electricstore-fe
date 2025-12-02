@@ -1,7 +1,6 @@
-/* src/components/Customer/ProductDetail.module.css */
+
 .container {
   padding: 16px;
-  /* Better typography: use a modern system font stack */
   --base-font: Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-family: var(--base-font);
   font-size: 16px;
@@ -9,7 +8,6 @@
   color: #222;
 }
 
-/* Two-column layout that overrides MUI Grid for the main product area */
 .twoColumn {
   display: flex;
   gap: 24px;
@@ -76,7 +74,6 @@
   word-break: break-word;
 }
 
-/* Make specs table use fixed layout so it doesn't resize based on other content */
 .specsTable {
   width: 100%;
   border-collapse: collapse;
@@ -95,12 +92,10 @@
   word-break: break-word;
 }
 
-/* New grid layout for specs: two columns */
 .specsGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0;
-  /* keep rows tight like a table */
 }
 
 .specItem {
@@ -169,7 +164,6 @@
   background-color: #0560e7;
 }
 
-/* Action buttons container and styles */
 .actionButtons {
   display: flex;
   gap: 12px;
@@ -206,7 +200,6 @@
   box-shadow: 0 10px 24px rgba(197, 45, 45, 0.16) !important;
 }
 
-/* Responsive: stack buttons and make full width on small screens */
 @media (max-width: 800px) {
   .actionButtons {
     flex-direction: column;
@@ -264,7 +257,6 @@
   justify-content: center;
 }
 
-/* Responsive */
 @media (max-width: 600px) {
   .mainImage {
     max-height: 300px;
@@ -276,7 +268,6 @@
   }
 }
 
-/* Tắt mũi tên mặc định của react-slick */
 .slick-prev,
 .slick-next {
   display: none !important;
@@ -300,7 +291,6 @@
   }
 }
 
-/* Related product card tweaks: fix card size, make title truncate */
 .relatedCard {
   height: 100%;
   display: flex;
@@ -321,7 +311,6 @@
   gap: 8px;
   padding: 12px 14px !important;
   min-height: 84px;
-  /* reserve space so long titles won't grow card */
 }
 
 .relatedTitle {
