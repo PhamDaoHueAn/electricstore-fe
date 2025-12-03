@@ -26,6 +26,7 @@ import {
 import API from '../../services/api';
 import axios from 'axios';
 import styles from './Checkout.module.css';
+import VnPay from '../../images/vnpay.webp';
 
 const GUEST_CART_KEY = 'guestCart';
 
@@ -260,7 +261,6 @@ const Checkout = () => {
     setCombinedAddress(combined);
     // Keep old `address` in sync for display/validation
     setAddress(combined);
-    setErrors(prev => ({ ...prev, address: validateAddress(combined) }));
   }, [street, selectedProvince, selectedDistrict, selectedWard, provinces, districts, wards]);
 
 
@@ -554,12 +554,14 @@ const Checkout = () => {
             sx={{ mb: 3 }}
             disabled
           />
-
+          <InputLabel>Phương thức thanh toán</InputLabel>
           <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel>Phương thức thanh toán</InputLabel>
+
             <Select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} disabled={loading}>
               <MenuItem value="cod">Thanh toán khi nhận hàng (COD)</MenuItem>
-              <MenuItem value="vnpay">Thanh toán qua VNPay</MenuItem>
+              <MenuItem value="vnpay">Thanh toán qua VNPay
+                <img src={VnPay} alt="VNPay" style={{ height: 24, marginLeft: 8, verticalAlign: 'middle' }} />
+              </MenuItem>
             </Select>
           </FormControl>
 

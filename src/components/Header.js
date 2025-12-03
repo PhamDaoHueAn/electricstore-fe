@@ -27,7 +27,7 @@ const Header = () => {
   const [cartCount, setCartCount] = useState(0);
   const [username, setUsername] = useState('');
   const [rolename, setRolename] = useState('');
-  const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg'); 
+  const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg');
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   const [categories, setCategories] = useState([]);
@@ -216,17 +216,26 @@ const Header = () => {
             </Button>
 
             {/* Menu dropdown */}
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}
-              PaperProps={{ sx: { mt: 1, minWidth: 220 } }}>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              className={styles.categoryMenu}
+              MenuListProps={{ className: styles.categoryMenuList }}
+              PaperProps={{ sx: { mt: 1, minWidth: 220 } }}
+            >
               {loadingCategories ? (
-                <MenuItem disabled><CircularProgress size={20} /> Đang tải...</MenuItem>
+                <MenuItem className={styles.categoryMenuItem} disabled>
+                  <CircularProgress size={20} />
+                  <span style={{ marginLeft: 8 }}>Đang tải...</span>
+                </MenuItem>
               ) : categories.length === 0 ? (
-                <MenuItem disabled>Không có danh mục</MenuItem>
+                <MenuItem className={styles.categoryMenuItem} disabled>Không có danh mục</MenuItem>
               ) : (
                 categories.map((category) => {
                   const categoryId = category.id || category.categoryId;
                   return (
-                    <MenuItem key={categoryId} onClick={() => handleCategoryClick(categoryId)}>
+                    <MenuItem key={categoryId} className={styles.categoryMenuItem} onClick={() => handleCategoryClick(categoryId)}>
                       {category.categoryName}
                     </MenuItem>
                   );
@@ -239,7 +248,7 @@ const Header = () => {
             <div className={styles.searchBox}>
               <Autocomplete
                 freeSolo
-                fullWidth                     
+                fullWidth
                 options={suggestions.map(p => p.productName)}
                 inputValue={searchTerm}
                 onInputChange={handleSearchChange}

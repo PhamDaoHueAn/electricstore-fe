@@ -1,4 +1,3 @@
-
 .header {
   background: linear-gradient(135deg, #009EE1 0%, #0077b6 100%) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
@@ -40,8 +39,41 @@
   font-size: 0.95rem;
 }
 
-.categoryText {
+.categoryText {}
 
+/* Dropdown category menu styles */
+.categoryMenu :global(.MuiPaper-root) {
+  border-radius: 10px;
+  overflow: visible;
+}
+
+.categoryMenuList {
+  padding: 8px 0;
+}
+
+.categoryMenuItem {
+  min-width: 220px;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  color: #222;
+  transition: background-color 0.12s ease, transform 0.08s ease;
+  border-radius: 6px;
+}
+
+.categoryMenuItem:hover {
+  background: linear-gradient(90deg, rgba(5, 96, 231, 0.08), rgba(0, 136, 255, 0.06));
+  transform: translateY(-1px);
+}
+
+.categoryMenuItem:disabled {
+  color: #888;
+  opacity: 0.9;
+}
+
+/* Drop shadow for the menu paper (use global selector to reach MUI Paper) */
+.categoryMenu :global(.MuiPaper-root) {
+  box-shadow: 0 8px 30px rgba(3, 32, 64, 0.12), 0 2px 8px rgba(3, 32, 64, 0.06);
+  border: 1px solid rgba(3, 32, 64, 0.06);
 }
 
 
