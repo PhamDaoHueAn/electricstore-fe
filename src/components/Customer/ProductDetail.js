@@ -14,7 +14,9 @@ import {
   Card,
   CardContent,
   CardMedia,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import Slider from 'react-slick';
 import EditIcon from '@mui/icons-material/Edit';
@@ -49,6 +51,8 @@ const ProductDetail = () => {
   const [editReviewId, setEditReviewId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -155,14 +159,15 @@ const ProductDetail = () => {
         await API.post('/Cart/add', { productId: parseInt(productId), quantity: 1 }, {
           headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
         });
-        alert('Đã thêm vào giỏ hàng!');
+        setSuccessMsg('Đã thêm vào giỏ hàng!');
         window.dispatchEvent(new Event('cartUpdate'));
       } catch (err) {
-        alert('Lỗi khi thêm vào giỏ!');
+        console.error('Lỗi khi thêm vào giỏ:', err);
+        setErrorMsg('Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại.');
       }
     } else {
       addToCart(1);
-      alert('Đã thêm vào giỏ hàng!');
+      setSuccessMsg('Đã thêm vào giỏ hàng!');
     }
   };
 
@@ -174,8 +179,9 @@ const ProductDetail = () => {
         });
         window.dispatchEvent(new Event('cartUpdate'));
         navigate('/checkout');
-      } catch {
-        alert('Lỗi khi thêm vào giỏ!');
+      } catch (err) {
+        console.error('Lỗi khi thêm vào giỏ:', err);
+        setErrorMsg('Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại.');
       }
     } else {
       addToCart(1);
@@ -606,6 +612,18 @@ const ProductDetail = () => {
             </Box>
           </Box>
         </Modal>
+        {/* Notifications */}
+        <Snackbar open={!!successMsg} autoHideDuration={3000} onClose={() => setSuccessMsg('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+          <Alert severity="success" onClose={() => setSuccessMsg('')} sx={{ width: '100%' }}>
+            {successMsg}
+          </Alert>
+        </Snackbar>
+
+        <Snackbar open={!!errorMsg} autoHideDuration={4000} onClose={() => setErrorMsg('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+          <Alert severity="error" onClose={() => setErrorMsg('')} sx={{ width: '100%' }}>
+            {errorMsg}
+          </Alert>
+        </Snackbar>
       </Box>
     </Container >
   );
