@@ -49,7 +49,7 @@ const Cart = () => {
 
   const saveGuestCart = (items) => {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
-    window.dispatchEvent(new Event('cartUpdate')); 
+    window.dispatchEvent(new Event('cartUpdate'));
   };
 
   const callApi = async (apiCall) => {
@@ -62,7 +62,7 @@ const Cart = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         setIsLoggedIn(false);
-        window.dispatchEvent(new Event('authChange')); 
+        window.dispatchEvent(new Event('authChange'));
       }
       throw error;
     }
@@ -101,10 +101,39 @@ const Cart = () => {
     setEditQuantities(map);
   }, [cartItems]);
 
+  const fetchStockQuantity = async (productId) => {
+    try {
+      const res = await API.get(`/Products/getStockQuantity/${productId}`);
+      return res?.data?.stockQuantity ?? 0;
+    } catch (err) {
+      console.error('Lỗi lấy tồn kho:', err);
+      throw new Error('Không thể kiểm tra tồn kho');
+    }
+  };
+
   const handleUpdateQuantity = async (productId, quantity) => {
     if (quantity < 1) return;
     setLoading(true);
 
+    // 1) Check stock first
+    let stock = 0;
+    try {
+      stock = await fetchStockQuantity(productId);
+    } catch (err) {
+      setError('Không thể kiểm tra tồn kho. Vui lòng thử lại sau.');
+      setLoading(false);
+      return;
+    }
+
+    if (quantity > stock) {
+      setError(`Tồn kho không đủ. Sản phẩm chỉ còn ${stock} cái.`);
+      // revert edit quantity to available stock or 1
+      setEditQuantities(prev => ({ ...prev, [productId]: stock > 0 ? stock : 1 }));
+      setLoading(false);
+      return;
+    }
+
+    // 2) Proceed to update cart (logged-in or guest)
     if (isLoggedIn) {
       try {
         await callApi((token) =>
@@ -114,8 +143,9 @@ const Cart = () => {
         );
         await fetchCart();
         window.dispatchEvent(new Event('cartUpdate'));
-      } catch {
-        setError('Tồn kho không đủ.');
+      } catch (err) {
+        console.error('Lỗi cập nhật giỏ hàng:', err);
+        setError('Cập nhật thất bại. Vui lòng thử lại.');
       }
     } else {
       try {
@@ -136,6 +166,7 @@ const Cart = () => {
         saveGuestCart(updated);
       }
     }
+
     setLoading(false);
   };
 
@@ -180,7 +211,7 @@ const Cart = () => {
   };
 
   const handleCheckout = () => {
-    navigate('/checkout'); 
+    navigate('/checkout');
   };
 
   const calculateTotal = () => {

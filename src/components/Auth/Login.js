@@ -79,22 +79,29 @@ const Login = () => {
                 if (err.response) {
                   const data = err.response.data;
 
-                  if (typeof data === 'string') {
-                    errorMessage = data.trim();
-                  }
-                  else if (data?.message) {
-                    errorMessage = data.message;
-                  }
-                  else if (data?.title) {
-                    errorMessage = data.title;
-                  }
-                  else if (data?.detail) {
-                    errorMessage = data.detail;
-                  }
-                  else if (data?.errors) {
-                    errorMessage = Object.values(data.errors).flat().join(', ');
-                  }
-                  else if (err.response.status === 401) {
+                  const normalize = (d) => {
+                    if (!d) return null;
+                    if (typeof d === 'string') return d.trim();
+                    if (d?.message) return d.message;
+                    if (d?.title) return d.title;
+                    if (d?.detail) return d.detail;
+                    if (d?.errors) return Object.values(d.errors).flat().join(', ');
+                    return null;
+                  };
+
+                  const serverMsg = normalize(data);
+
+                  if (serverMsg) {
+                    if (serverMsg === 'Incorrect username or password') {
+                      errorMessage = 'Tên đăng nhập hoặc mật khẩu không đúng';
+                    } else if (serverMsg === 'Account is deactivated') {
+                      errorMessage = 'Tài khoản đã bị vô hiệu hóa';
+                    } else if (serverMsg.startsWith('Internal server error')) {
+                      errorMessage = 'Lỗi máy chủ nội bộ. Vui lòng thử lại sau.';
+                    } else {
+                      errorMessage = serverMsg;
+                    }
+                  } else if (err.response.status === 401) {
                     errorMessage = 'Tên đăng nhập hoặc mật khẩu không đúng';
                   }
                 } else if (err.message) {

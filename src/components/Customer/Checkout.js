@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -24,6 +24,7 @@ import {
   InputAdornment
 } from '@mui/material';
 import API from '../../services/api';
+import axios from 'axios';
 import styles from './Checkout.module.css';
 
 const GUEST_CART_KEY = 'guestCart';
@@ -49,6 +50,16 @@ const Checkout = () => {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
+  const [street, setStreet] = useState(''); // Số nhà, tên đường
+
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedWard, setSelectedWard] = useState('');
+  const [combinedAddress, setCombinedAddress] = useState('');
 
   const [errors, setErrors] = useState({
     fullName: '',
@@ -77,6 +88,8 @@ const Checkout = () => {
     return '';
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     setIsLoggedIn(!!token);
@@ -92,16 +105,16 @@ const Checkout = () => {
     }
   };
 
-  const refreshToken = async () => {
+  const refreshToken = useCallback(async () => {
     const refreshTokenValue = localStorage.getItem('refreshToken');
     if (!refreshTokenValue) throw new Error('No refresh token');
     const response = await API.post('/Auth/refresh-token', { refreshToken: refreshTokenValue });
     localStorage.setItem('accessToken', response.data.accessToken);
     localStorage.setItem('refreshToken', response.data.refreshToken);
     return response.data.accessToken;
-  };
+  }, []);
 
-  const callApi = async (apiCall) => {
+  const callApi = useCallback(async (apiCall) => {
     const token = localStorage.getItem('accessToken');
     if (!token) return null;
     try {
@@ -121,7 +134,26 @@ const Checkout = () => {
       }
       throw error;
     }
-  };
+  }, [refreshToken]);
+
+  const calculateTotal = useCallback((items) => {
+    const total = items.reduce((sum, item) => sum + (item.sellPrice * item.quantity), 0);
+    setTotalPrice(total);
+
+    let discount = 0;
+    let pointsDiscount = 0;
+
+    if (isLoggedIn) {
+      discount = voucherDiscount;
+      const maxPoints = Math.floor(total / 10000);
+      const pointsToUse = usePoints ? Math.min(userPoints, maxPoints) : 0;
+      pointsDiscount = pointsToUse * 10000;
+      setUsedPoints(pointsToUse);
+    }
+
+    const final = total - discount - pointsDiscount;
+    setFinalPrice(final > 0 ? final : 0);
+  }, [isLoggedIn, voucherDiscount, userPoints, usePoints]);
 
   useEffect(() => {
     if (!authChecked) return;
@@ -149,6 +181,10 @@ const Checkout = () => {
           setFullName(profile.fullName || '');
           setPhoneNumber(profile.phone || '');
           setAddress(profile.address || '');
+          // Try to prefill street and province/district/ward from profile.address if possible
+          if (profile.address) {
+            setCombinedAddress(profile.address);
+          }
           setUserPoints(profile.point || 0);
 
           setErrors({
@@ -172,27 +208,62 @@ const Checkout = () => {
     };
 
     loadData();
-  }, [isLoggedIn, authChecked, navigate]);
+  }, [isLoggedIn, authChecked, navigate, calculateTotal, callApi]);
 
-  // === TÍNH TOÁN GIÁ ===
-  const calculateTotal = (items) => {
-    const total = items.reduce((sum, item) => sum + (item.sellPrice * item.quantity), 0);
-    setTotalPrice(total);
+  // Load provinces on mount
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const res = await axios.get('https://provinces.open-api.vn/api/?depth=1');
+        setProvinces(res.data || []);
+      } catch (err) {
+        console.error('Không thể tải danh sách tỉnh/thành:', err);
+      }
+    };
+    loadProvinces();
+  }, []);
 
-    let discount = 0;
-    let pointsDiscount = 0;
-
-    if (isLoggedIn) {
-      discount = voucherDiscount;
-      const maxPoints = Math.floor(total / 10000);
-      const pointsToUse = usePoints ? Math.min(userPoints, maxPoints) : 0;
-      pointsDiscount = pointsToUse * 10000;
-      setUsedPoints(pointsToUse);
+  const handleProvinceChange = async (code) => {
+    setSelectedProvince(code);
+    setSelectedDistrict('');
+    setSelectedWard('');
+    setDistricts([]);
+    setWards([]);
+    try {
+      const res = await axios.get(`https://provinces.open-api.vn/api/p/${code}?depth=2`);
+      setDistricts(res.data?.districts || []);
+    } catch (err) {
+      console.error('Lỗi tải quận/huyện:', err);
     }
-
-    const final = total - discount - pointsDiscount;
-    setFinalPrice(final > 0 ? final : 0);
   };
+
+  const handleDistrictChange = async (code) => {
+    setSelectedDistrict(code);
+    setSelectedWard('');
+    setWards([]);
+    try {
+      const res = await axios.get(`https://provinces.open-api.vn/api/d/${code}?depth=2`);
+      setWards(res.data?.wards || []);
+    } catch (err) {
+      console.error('Lỗi tải phường/xã:', err);
+    }
+  };
+
+  useEffect(() => {
+    // Build combined address from parts whenever any part changes
+    const provinceName = provinces.find(p => String(p.code) === String(selectedProvince))?.name || '';
+    const districtName = districts.find(d => String(d.code) === String(selectedDistrict))?.name || '';
+    const wardName = wards.find(w => String(w.code) === String(selectedWard))?.name || '';
+
+    const parts = [street && street.trim(), wardName, districtName, provinceName].filter(Boolean);
+    const combined = parts.join(', ');
+    setCombinedAddress(combined);
+    // Keep old `address` in sync for display/validation
+    setAddress(combined);
+    setErrors(prev => ({ ...prev, address: validateAddress(combined) }));
+  }, [street, selectedProvince, selectedDistrict, selectedWard, provinces, districts, wards]);
+
+
 
   // === ÁP DỤNG VOUCHER ===
   const applyVoucher = async () => {
@@ -416,18 +487,72 @@ const Checkout = () => {
 
           <TextField
             fullWidth
-            label="Địa chỉ giao hàng *"
-            value={address}
+            label="Số nhà, tên đường *"
+            value={street}
             onChange={(e) => {
-              setAddress(e.target.value);
-              setErrors(prev => ({ ...prev, address: validateAddress(e.target.value) }));
+              setStreet(e.target.value);
             }}
             error={!!errors.address}
-            helperText={errors.address || 'Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành'}
-            multiline
-            rows={3}
-            sx={{ mb: 3 }}
+            helperText={errors.address || 'Ví dụ: 123 Nguyễn Trãi'}
+            sx={{ mb: 2 }}
             disabled={loading}
+          />
+
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="province-label">Tỉnh/Thành *</InputLabel>
+            <Select
+              labelId="province-label"
+              value={selectedProvince}
+              label="Tỉnh/Thành *"
+              onChange={(e) => handleProvinceChange(e.target.value)}
+              disabled={loading || provinces.length === 0}
+            >
+              {provinces.map(p => (
+                <MenuItem key={p.code} value={p.code}>{p.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="district-label">Quận/Huyện *</InputLabel>
+            <Select
+              labelId="district-label"
+              value={selectedDistrict}
+              label="Quận/Huyện *"
+              onChange={(e) => handleDistrictChange(e.target.value)}
+              disabled={loading || districts.length === 0}
+            >
+              {districts.map(d => (
+                <MenuItem key={d.code} value={d.code}>{d.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="ward-label">Phường/Xã *</InputLabel>
+            <Select
+              labelId="ward-label"
+              value={selectedWard}
+              label="Phường/Xã *"
+              onChange={(e) => setSelectedWard(e.target.value)}
+              disabled={loading || wards.length === 0}
+            >
+              {wards.map(w => (
+                <MenuItem key={w.code} value={w.code}>{w.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <TextField
+            fullWidth
+            label="Địa chỉ đầy đủ (xem trước)"
+            value={combinedAddress}
+            InputProps={{ readOnly: true }}
+            helperText={errors.address || 'Hệ thống sẽ ghép địa chỉ tự động'}
+            multiline
+            rows={2}
+            sx={{ mb: 3 }}
+            disabled
           />
 
           <FormControl fullWidth sx={{ mb: 3 }}>

@@ -30,6 +30,15 @@ API.interceptors.response.use(
 
     // Xử lý lỗi 401 với refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // If the request is an auth endpoint (login/register/etc.), don't attempt
+      // to refresh or redirect here — let the caller handle the 401 so the
+      // UI can display the proper error message without an automatic reload.
+      const authEndpoints = ['/Auth/login', '/Auth/register', '/Auth/forgot-password'];
+      const url = originalRequest.url || '';
+      if (authEndpoints.some(ep => url.includes(ep))) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
