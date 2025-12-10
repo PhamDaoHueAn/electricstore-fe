@@ -21,7 +21,7 @@ import API from '../services/api';
 
 const MyChatbot = () => {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState([]); 
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -83,7 +83,7 @@ const MyChatbot = () => {
     setLoading(true);
 
     try {
-      const res = await API.post('/Chatbot/send', { message: userMsg });
+      const res = await API.post('/Chatbot/send', { message: userMsg }, { timeout: 60000 });
 
       const botReply = {
         role: 'model',
@@ -152,7 +152,7 @@ const MyChatbot = () => {
                   variant="contained"
                   size="small"
                   onClick={() => {
-                    
+
                     navigate(`/product-detail/${product.id}`);
                   }}
                   sx={{ borderRadius: 2 }}
