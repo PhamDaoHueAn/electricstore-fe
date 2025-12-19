@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://14.225.254.184:8080/api',
+  baseURL: 'https://dienmayxanhvipbe.io.vn/api',
   headers: { 'Content-Type': 'application/json' },
   timeout: 10000, // Thêm timeout mặc định 10s
 });
@@ -44,7 +44,7 @@ API.interceptors.response.use(
       if (refreshToken) {
         try {
           console.log('Attempting to refresh token...');
-          const res = await axios.post('http://14.225.254.184:8080/api/Auth/refresh-token', { refreshToken });
+          const res = await axios.post('https://dienmayxanhvipbe.io.vn/api/Auth/refresh-token', { refreshToken });
           console.log('Refresh token response:', res.data);
           localStorage.setItem('accessToken', res.data.accessToken);
           localStorage.setItem('refreshToken', res.data.refreshToken);
