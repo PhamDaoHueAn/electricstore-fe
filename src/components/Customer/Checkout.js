@@ -261,6 +261,7 @@ const Checkout = () => {
     setCombinedAddress(combined);
     // Keep old `address` in sync for display/validation
     setAddress(combined);
+    setErrors(prev => ({ ...prev, address: validateAddress(combined) }));
   }, [street, selectedProvince, selectedDistrict, selectedWard, provinces, districts, wards]);
 
 
