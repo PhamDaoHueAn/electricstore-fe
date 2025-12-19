@@ -23,6 +23,7 @@ import {
   Checkbox,
   InputAdornment
 } from '@mui/material';
+import FormHelperText from '@mui/material/FormHelperText';
 import API from '../../services/api';
 import axios from 'axios';
 import styles from './Checkout.module.css';
@@ -65,7 +66,10 @@ const Checkout = () => {
   const [errors, setErrors] = useState({
     fullName: '',
     phoneNumber: '',
-    address: ''
+    address: '',
+    province: '',
+    district: '',
+    ward: ''
   });
 
   const validateFullName = (value) => {
@@ -261,7 +265,7 @@ const Checkout = () => {
     setCombinedAddress(combined);
     // Keep old `address` in sync for display/validation
     setAddress(combined);
-    setErrors(prev => ({ ...prev, address: validateAddress(combined) }));
+    setErrors(prev => ({ ...prev }));
   }, [street, selectedProvince, selectedDistrict, selectedWard, provinces, districts, wards]);
 
 
@@ -303,9 +307,19 @@ const Checkout = () => {
     const phoneError = validatePhone(phoneNumber);
     const addressError = validateAddress(address);
 
+    const provinceError = !selectedProvince ? 'Vui lòng chọn tỉnh/thành' : '';
+    const districtError = !selectedDistrict ? 'Vui lòng chọn quận/huyện' : '';
+    const wardError = !selectedWard ? 'Vui lòng chọn phường/xã' : '';
+
     if (nameError || phoneError || addressError) {
-      setErrors({ fullName: nameError, phoneNumber: phoneError, address: addressError });
+      setErrors({ fullName: nameError, phoneNumber: phoneError, address: addressError, province: provinceError, district: districtError, ward: wardError });
       setError('Vui lòng kiểm tra lại thông tin.');
+      return;
+    }
+
+    if (provinceError || districtError || wardError) {
+      setErrors(prev => ({ ...prev, province: provinceError, district: districtError, ward: wardError }));
+      setError('Vui lòng chọn đầy đủ tỉnh/thành, quận/huyện và phường/xã.');
       return;
     }
 
@@ -507,11 +521,13 @@ const Checkout = () => {
               label="Tỉnh/Thành *"
               onChange={(e) => handleProvinceChange(e.target.value)}
               disabled={loading || provinces.length === 0}
+              error={!!errors.province}
             >
               {provinces.map(p => (
                 <MenuItem key={p.code} value={p.code}>{p.name}</MenuItem>
               ))}
             </Select>
+            {errors.province && <FormHelperText error>{errors.province}</FormHelperText>}
           </FormControl>
 
           <FormControl fullWidth sx={{ mb: 2 }}>
@@ -522,11 +538,13 @@ const Checkout = () => {
               label="Quận/Huyện *"
               onChange={(e) => handleDistrictChange(e.target.value)}
               disabled={loading || districts.length === 0}
+              error={!!errors.district}
             >
               {districts.map(d => (
                 <MenuItem key={d.code} value={d.code}>{d.name}</MenuItem>
               ))}
             </Select>
+            {errors.district && <FormHelperText error>{errors.district}</FormHelperText>}
           </FormControl>
 
           <FormControl fullWidth sx={{ mb: 2 }}>
@@ -537,11 +555,13 @@ const Checkout = () => {
               label="Phường/Xã *"
               onChange={(e) => setSelectedWard(e.target.value)}
               disabled={loading || wards.length === 0}
+              error={!!errors.ward}
             >
               {wards.map(w => (
                 <MenuItem key={w.code} value={w.code}>{w.name}</MenuItem>
               ))}
             </Select>
+            {errors.ward && <FormHelperText error>{errors.ward}</FormHelperText>}
           </FormControl>
 
           <TextField
@@ -606,7 +626,7 @@ const Checkout = () => {
             size="large"
             fullWidth
             onClick={handleCheckout}
-            disabled={loading || cartItems.length === 0}
+            disabled={loading || cartItems.length === 0 || !selectedProvince || !selectedDistrict || !selectedWard}
             sx={{
               py: 2,
               fontSize: '1.2rem',
