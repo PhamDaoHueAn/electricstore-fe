@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../../services/api';
-import { Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, CircularProgress, Tooltip, Avatar, Pagination, Stack, TextField, InputAdornment, Typography, Chip } from '@mui/material';
+import { Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, CircularProgress, Tooltip, Avatar, Pagination, Stack, TextField, InputAdornment, Typography, Chip, colors } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -16,6 +16,7 @@ const ProductList = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(12);
+
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -39,7 +40,7 @@ const ProductList = () => {
           apiUrl = `/Products/Search?search=${encodeURIComponent(searchTerm.trim())}&pageNumber=${page}&pageSize=${pageSize}`;
         } else {
           // Không có search thì dùng endpoint GetAll
-          apiUrl = `/Products/GetAll?pageNumber=${page}&pageSize=${pageSize}`;
+          apiUrl = `/Products/GetAll?pageNumber=${page}&pageSize=${pageSize}&sortBy=stock`;
         }
 
         const res = await API.get(apiUrl);
@@ -155,9 +156,11 @@ const ProductList = () => {
                       <TableCell>
                         <Avatar variant="rounded" src={img} alt={p.ProductName || p.productName} />
                       </TableCell>
-                      <TableCell>{p.ProductName || p.productName}</TableCell>
+                      <TableCell >{p.ProductName || p.productName}</TableCell>
                       <TableCell>{formatPrice(p.SellPrice || p.sellPrice)}</TableCell>
-                      <TableCell>{p.StockQuantity || p.stockQuantity}</TableCell>
+                      {p.stockQuantity <= 10 ? (
+                        <TableCell sx={{ color: colors.red[500], fontWeight: 'bold' }}>{p.StockQuantity || p.stockQuantity}</TableCell>
+                      ) : (<TableCell >{p.StockQuantity || p.stockQuantity}</TableCell>)}
                       <TableCell>
                         <Chip
                           label={isActive ? 'Đang bán' : 'Ngừng bán'}
