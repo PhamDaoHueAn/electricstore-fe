@@ -79,10 +79,13 @@ const StatisticsReport = () => {
       const filteredImports = filterDataByPeriod(allImportsResponse.data || [], 'importDate', importFilter);
       setImports(filteredImports);
 
-      // Fetch orders
-      const ordersResponse = await API.get('/order/getall');
-      const filteredOrders = filterDataByPeriod(ordersResponse.data || [], 'orderDate', orderFilter);
-      setOrders(filteredOrders);
+      // Fetch orders (use same endpoint as OrderList and unwrap paged response)
+      const ordersResponse = await API.get('/Order/getAll?pageNumber=1&pageSize=10000');
+      // OrderList returns paged data in res.data.data; fall back to res.data if API differs
+      const ordersData = ordersResponse.data?.data || ordersResponse.data || [];
+      const filteredOrders = filterDataByPeriod(ordersData, 'orderDate', orderFilter);
+      // Show only orders with status 'Delivered'
+      setOrders(filteredOrders.filter(o => o.status === 'Delivered'));
 
       setLoading(false);
     } catch (err) {
@@ -405,7 +408,7 @@ const StatisticsReport = () => {
                             backgroundColor: order.status === 'Delivered' ? '#4caf50' : '#ff9800',
                             color: 'white'
                           }}>
-                            {order.status}
+                            {order.status === 'Delivered' ? 'Đã giao' : order.status}
                           </span>
                         </TableCell>
                         <TableCell align="right" sx={{ fontWeight: 'bold' }}>
@@ -471,7 +474,7 @@ const StatisticsReport = () => {
                               imp.status === 'Cancelled' ? '#f44336' : '#ff9800',
                             color: 'white'
                           }}>
-                            {imp.status}
+                            {imp.status === 'Delivered' ? 'Đã giao' : imp.status}
                           </span>
                         </TableCell>
                         <TableCell>
