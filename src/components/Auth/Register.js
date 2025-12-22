@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, Box, Typography, TextField, Button, Alert, Avatar, CssBaseline } from '@mui/material';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Container, Box, Typography, TextField, Button, Alert, Avatar, CssBaseline, Link } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -206,9 +206,9 @@ const Register = () => {
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Typography variant="body2">
               Đã có tài khoản?{' '}
-              <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }}>
+              <Link component={RouterLink} to="/login" onMouseDown={(e) => e.preventDefault()} sx={{ color: '#0560e7', fontWeight: 600, textDecoration: 'none' }}>
                 Đăng nhập
-              </a>
+              </Link>
             </Typography>
           </Box>
         </Box>
