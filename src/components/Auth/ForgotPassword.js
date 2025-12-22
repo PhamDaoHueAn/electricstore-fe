@@ -1,12 +1,12 @@
 import React from 'react';
-import { 
-  TextField, 
-  Button, 
-  Container, 
-  Typography, 
-  Link, 
-  Paper, 
-  Avatar, 
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
+  Link,
+  Paper,
+  Avatar,
   Box,
   CssBaseline
 } from '@mui/material';
@@ -79,9 +79,9 @@ const ForgotPassword = () => {
                   }}
                 />
                 {status && (
-                  <Typography 
-                    color={status.includes('gửi') ? 'primary' : 'error'} 
-                    variant="body2" 
+                  <Typography
+                    color={status.includes('gửi') ? 'primary' : 'error'}
+                    variant="body2"
                     sx={{ textAlign: 'center' }}
                   >
                     {status}
@@ -108,7 +108,7 @@ const ForgotPassword = () => {
             )}
           </Formik>
           <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Link href="/login" variant="body2" sx={{ color: '#0560e7' }}>
+            <Link href="/login" variant="body2" onMouseDown={(e) => e.preventDefault()} sx={{ color: '#0560e7' }}>
               Quay lại đăng nhập
             </Link>
           </Box>

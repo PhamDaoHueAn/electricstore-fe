@@ -194,8 +194,7 @@ const Checkout = () => {
 
           setErrors({
             fullName: validateFullName(profile.fullName || ''),
-            phoneNumber: validatePhone(profile.phone || ''),
-            address: validateAddress(profile.address || '')
+            phoneNumber: validatePhone(profile.phone || '')
           });
 
         } catch (err) {
