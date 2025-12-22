@@ -15,7 +15,7 @@ import {
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { login, isAdminOrEmployee, isAuthenticated } from '../../services/auth';
 
 const validationSchema = Yup.object({
@@ -191,7 +191,9 @@ const Login = () => {
           {/* Liên kết phụ */}
           <Box sx={{ mt: 4, textAlign: 'center' }}>
             <Link
-              href="/forgot-password"
+              component={RouterLink}
+              to="/forgot-password"
+              onMouseDown={(e) => e.preventDefault()}
               variant="body2"
               sx={{
                 color: '#0560e7',
@@ -206,7 +208,9 @@ const Login = () => {
               hoặc
             </Typography>
             <Link
-              href="/register"
+              component={RouterLink}
+              to="/register"
+              onMouseDown={(e) => e.preventDefault()}
               variant="body2"
               sx={{
                 color: '#0560e7',
